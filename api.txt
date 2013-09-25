@@ -1,0 +1,1473 @@
+GENERAL
+
+All api calls consist of a "call name", called from now on "method", and
+multiple parameters.
+
+Some parameters can be bundled with all methods and some are method specific.
+
+Authentication is not required for all methods.
+
+So far only HTTP/HTTPS interface is available. Method name is passed as
+request path (you should request /list to call "list" method) and parameters
+are passed by either GET, POST or using a cookie (and are set in this order,
+so cookie with some name will override the same GET parameter).
+
+Responses are normally JSON array with multiple fields. The key "result" is
+always present. Normally result=0 means success while a non-zero result means 
+an error. A non-zero result also sets the "error" key with an error message.
+Error codes passed by result can be seen in ERRORS array of settings.lua.
+When there is an error HTTP header "X-Error: xxxx" is sent with the error code.
+
+On a single connection (i.e. keep-alive connection) you need to authenticate
+successfully just once. All requests after that will ignore any user
+credentials passed and will use the ones from the successful authentication.
+
+All files and folders can be accessed by either full "path" (discouraged)
+or a fileid/folderid. When creating a file/folder using  the "id" approach
+you need to pass parent "folderid" and "name". For access/deletion you need
+just folderid/fileid.
+
+The root folder of every user always has folderid of "0".
+
+Full paths always start with "/". Trailing slashes MUST NOT be present.
+
+Implementations MUST accept 64 bit numbers for all ids and especially when 
+dealing with quotas and filesizes (that are in bytes).
+
+Data/files can be uploaded over HTTP by using the POST method and
+"multipart/form-data" encoding, or using a PUT request. 
+
+For the PUT request the body is the data. In this case you MUST send all
+your parameters as part of the request. If a filename is needed it MUST be
+passed in "filename" parameter. PUT can upload just one file, POST can do
+multiple files.
+
+When uploading files you can skip passing the Content-Length header if it is
+hard or impossible to compute. If you are using POST method, you have a proper
+way of indicating end of upload - boundary with trailing "--". If you are using
+PUT method you can only indicate end of stream by closing the connection in 
+this case (closing the sending end and still reading the reply of course will
+work).
+
+You can push multiple requests over single connection without waiting for
+answer, to improve performance. The server will process the requests in the
+order they are received and you are guaranteed to receive answers in the same
+order. It is important however to send all requests with 
+"Connection: keep-alive", otherwise the API server will close the connection
+without processing the pending requests. The server will also close
+the connection on any bad request (bad HTTP request, not-existing method or
+anything else that the server doesn't understand). The connection does not
+close when you get the error from a valid method (like fileid not found,
+folder is not empty, etc.). It is perfectly safe to send multiple requests
+at once (like in one network packet).
+
+When possible you should use single connection for all metadata requests, 
+as explained earlier it is perfectly fine to send new requests without knowing
+the status of the previous requests. This will not slow down your application,
+as the chances are that more time is taken by the network latency than for
+processing the actual request request. However you should make sure that in 
+no event two threads/processes write to the same connection at the same time.
+The API server will not be able to respond correctly to two interleaved
+requests and data corruption may occur. While writes of small amount of
+data on a socket MIGHT be atomic on some operating systems it is
+preferable to use locks or dedicated thread responsible for all the 
+reading/writing to the socket.
+
+Initially connections open to the server have quite low inactivity timeout.
+However once your authenticate over the connection the timeout will be quite
+long (over an hour).
+
+The API server may in some cases send compressed content if the client
+indicates support for it (via the "Accept-Encoding" header).
+
+BINARY PROTOCOL
+
+As alternative for HTTP/JSON protocol, a pure binary interface is available.
+
+To use binary protocol, connect to API servers on port 8398 for unencrypted
+connection and on port 8399 for SSL connection.
+
+All numbers, regardless of their size (8, 16, 48, 32, 40, 48, 56 or 64 bit) 
+are little endian.
+
+When there is a length preceding the payload, the length does not include
+itself, that is if you have 4 bytes length and 10 bytes payload, length will
+be 10, not 14.
+
+- SENDING BINARY REQUEST
+
+The request to the API servers starts with 16 bit length of the request, the
+request itself and optional data. The length obviously limits the request length
+to 64K and DOES NOT include the length of the data that may be present.
+
+The first byte of the request gives the length of the name of the method
+(bits 0-6) and indicates if the request has data (bit 7). If the highest bit
+(7) is set, than the following 8 bytes represent 64 bit number, that is the
+length of the data that comes immediately after the request. The next
+method_len bytes are the name of the method to be called.
+
+The following one byte represent 8 bit number containing the number of
+parameters passed.
+
+All numbers are positive numbers. If you need to send a negative number (for
+example a negative file descriptor, see below), send it as string.
+
+There are 3 types of parameters passed to API servers (with their code):
+0 - string
+1 - 64bit number
+2 - boolean
+
+For each parameter, the first byte represent the parameter type index in two
+highest bits (6-7) and the length of the parameter name in the low 6 bits (0-5).
+The following param_name_len bytes are the name of the parameter. If the
+parameter is :
+
+* string, 4 byte length and string contents follow
+* number, 8 byte (64 bit) number representation follow
+* boolean, 1 byte, zero representing false and all other values represent true
+
+-- SENDING FILES
+
+To send file (you can only send one file per request), set the filename
+parameter to the name of your file and send the file contents as data.
+
+- RECEIVING BINARY RESPONSE
+
+The response starts with 4 byte (32 bit) length. The response is normally a
+tree structure. There are 6 types of values:
+
+string
+number
+boolean
+array
+hash (like JSON object)
+data
+
+For each value, the first byte represent the type of the value. Since the
+response is highly compressed, each valuetype can have multiple types:
+
+Strings:
+  String values can be reused values (pointer to a string value already sent)
+  or new values. Each time a new string value is sent the client is supposed to
+  assign it a new numeric id (starting 0), when the API server asks the client
+  to reuse a string value, numeric id of the string will be sent. Old values
+  are reused only per-request - that is server will use pointer string values 
+  only to objects from the same request.
+  
+  New strings types:
+   [100,149] - short string between 0 and 49 bytes in len (type-100), the type
+   is directly followed by string bytes
+    0 - 1 byte len string, type is followed by 1 byte indicating string length
+        and then by the string itself
+    1 - 2 byte len string....
+    2 - 3 byte len string....
+    3 - 4 byte len string....
+  Reused string types:
+    [150,199] - for string ids between 0 and 49 id is directly encoded in type
+    4 - 1 byte string id follows type
+    5 - 2 byte string id follows type
+    6 - 3 byte string id follows type
+    7 - 4 byte string id follows type
+    
+Numbers:
+  Numbers types:
+    [200, 219] - numbers between 0 and 19 are directly encoded in the type
+    parameter
+    8 - 1 byte number follows
+    9 - 2 byte number follows
+    ....
+    14 - 7 byte number follows
+    15 - 8 byte number follows
+
+Boolean:
+    Boolean values are encoded as following types:
+    18 - false
+    19 - true
+    
+Array:
+    type: 17
+    array are represented as unspecified number of values, ending with value of
+    type "255"
+    
+Hash:
+    type: 16
+    hashes are represented as unspecified number of pairs of values, ending
+    with value of type "255".
+    First value of the pair is the key and second is the value of the given
+    entry in the hash table.
+    The key is always string value.
+
+Data:
+    type: 20, followed by 8 byte number that indicates how much data the server
+    is sending after the response to this request (that is the data starts
+    after the 4 byte length is read from the server)
+
+The first value you get is always of type "hash". This is the same hash you get
+as JSON result that is it will always have key "result" with "number" value and
+optionally other keys and values, described in the descriptions of the methods.
+
+-- RECEIVING FILES/DATA
+
+If the response is a "data" response, you will also have the "data" key in the
+first hash, with type "data".
+
+BINARY API SDK:
+
+To pass parameters to commands, the following macro are used:
+
+(ignore the comments about number of evaluations if you are passing string
+literals or just regular variables as parameters to macro, they are intended
+to warn you not to do stuff like P_STR("name", str++) )
+
+P_STR("paramname", "param value") - string argument, both first and second
+arguments are evaluated twice.
+
+P_LSTR("paramname", "param value", value_len) - string argument, with know
+value length. Value does not need to be null terminated, value and value_len 
+are evaluated just once, "paramname" is evaluated twice.
+
+P_NUM("paramname", uin64_t_num_value) - number argument, name is evaluated
+twice, the number just once.
+
+P_BOOL("paramname", bool) - bool can be anything that can evaluate as
+true/false (pointer, number). The bool argument is evaluated once, the name
+twice.
+
+apisock *api_connect();
+apisock *api_connect_ssl();
+
+  Connect to an api server, on failure return NULL.
+
+void api_close(apisock *sock);
+
+  Closes connection to the server.
+
+binresult *send_command(apisock *sock, const char *command, ...);
+  
+  Sends a command to the server and return result. This is a macro, evaluating
+the command parameter twice. The ... stands for any number of parameters. NULL
+indicates an error, non-NULL result will be the command's response and needs
+to be deallocated with free().
+
+binresult *send_command_nb(apisock *sock, const char *command, ...);
+  
+  Same as send_command, but does not read the result from the api server. On
+failure returns NULL, on success returns PTR_OK, which does not need to be
+freed. You are supposed to read the result with get_result() when you are 
+ready to do so.
+
+binresult *send_data_command(apisock *sock, const char *command, uint64_t datalen, ...);
+
+  Same as send_command_nb, but indicates that you will be sending data with the
+request. You are supposed to write datalen bytes to the connection after this
+call (if it's successful) with writeall() and get the result with get_result().
+
+binresult *get_result(apisock *sock);
+
+  Reads and parses the result of the previous command. Non-NULL return value
+indicates success and needs to be deallocated with free().
+
+int writeall(apisock *sock, const void *ptr, size_t len)
+
+  Writes all the len bytes at *ptr to the socket and returns 0 on success
+and -1 on error.
+
+ssize_t readall(apisock *sock, void *ptr, size_t len)
+
+  Reads all len bytes from the socket to *ptr and returns the number of bytes
+read (always len) or -1 on error.
+
+
+FILE DESCRIPTORS, READING & WRITING DATA, CHUNKED UPLOAD
+
+When you open a file with file_open you will get a file descriptor. You can use
+it to read and write data to the file. File descriptors are numbers, the first 
+descriptor is always 1. Instead of using the actual descriptor number, you can
+refer files by the sequence they were opened in. You can refer to the last
+opened file by descriptor "-1", the one opened before that "-2", etc.. That is
+useful if you want to pipeline open request together with read/write requests
+without waiting for the answer. 
+  Of course, if the open fails, all subsequent pipelined read/write operations
+for it will fail too. Failed opens however also "waste" file descriptors, which
+is useful because you can pipeline for example three open commands and 
+if the second one fails, still addressing first descriptor by -3 will still
+be correct as well as addressing the last one by -1. Descriptor numbers are
+not reused.
+
+A descriptor is only valid for the same connection. If a connection closes,
+all the files are also closed. You can open the same file in multiple
+connections.
+
+This can be used for chunked upload - open the file and then write chunks
+with write. If the connection drops, it is safe to resume upload from the 
+current file size (if you of course write data sequentially).
+
+When reading data from file, data will be sent to you on the same connection
+that you requested it. That might be not really convenient if you expect a JSON
+response. So, when using file_read and file_pread you should generally expect
+binary data. When you are getting data, the Content-Type will be
+"application/octet-stream". In case of error, Content-Type will be
+"application/json" as usual and the "X-Error: xxxx" header will be present.
+If you are getting data, observe Content-Length to see how much data you are
+getting. Normally you will get all the data you requested, except in cases that
+you want to read more data than is available (past the current file offset).
+
+Writing data to file with file_write/file_pwrite methods works the same way as
+with uploading files - you can either use the PUT method, where the data of
+with size of "Content-Length" will be sent after the headers. Or you can use
+POST with "multipart/form-data" encoding. In this case the data should be send 
+in the field named "data" that should be after any post parameters (as with
+uploading files).
+
+FILENAMES
+
+File and folder names are in UTF8 encoding. 
+They must be shorter than 1024 bytes (not characters).
+Filenames are case sensitive.
+There MUST NOT be two files or two folders with the same name in the same 
+folder. 
+!!! However a file and a folder may share a name even when they are in the
+!!! same folder. Since most operations are different for files and folders,
+!!! that should not be a problem.
+Deleted folders do not have unique names - there might be many deleted folders
+with the same name in the same folder.
+Deleted files still have unique names.
+When a new file is created with the same name in the same folder old fileid is
+reused and contents of the old file are saved as revision.
+
+Generally all characters are allowed in filenames, except the NUL byte, forward
+and backslash (/,\ and \0).
+
+PASSING DATE/TIME VALUES
+
+When you need to pass datetime to a method, it should be in one of the
+following formats:
+
+- RFC 2822 (Thu, 21 Dec 2000 16:01:07 +0200), the day of week can be omitted 
+(21 Dec 2000 16:01:07 +0200).
+- ISO 8601 (2004-02-12T15:19:21+00:00 or part of it, any part after the year
+can be omitted, " " instead of "T" is supported).
+- unix timestamp [TZ] (time zone is optional, default is UTC)
+- YYYYMMDDhhmmss [TZ]
+
+SOME text abbreviated timezones (e.g. EEST) are generally supported, but their
+use is discouraged.
+
+METADATA
+
+The metadata for a file or folder normally consists of:
+  parentfolderid - integer: is the folderid of the folder the object resides in
+  isfolder - bool: is it a folder(true) or file(false)
+  ismine   - bool: is the object owned by the user
+         if ismine is false than four other bool fields are provided:
+         canread, canmodify, candelete, cancreate (cancreate - only for folders)
+         these are user's permissions for this object
+         also, when ismine is false, userid is provided with the id of the owner
+         of the file/folder. This userid can be matched with userid's provided
+         by either "listshares" method or "acceptedsharein"/"acceptedshareout"
+         events by "diff" method.
+  isshared - bool: is the object shared with other users
+  name     - string: the name of file or folder
+  id       - string: unique string id. For folders this is folderid prepended
+             with letter "d" and for files it is the fileid with "f" in front.
+  folderid - for folders: the folderid of the folder
+  fileid   - for files: file's fileid
+  deletedfileid - it is possible that as a result of "renamefile" operation a
+             file with the same name gets deleted (e.g. file "old.txt" is
+             renamed to "new.txt" when "new.txt" already exists in this folder).
+             In these cases deletedfileid is set to fileid of the deleted file.
+  created  - timestamp: creation date of the object
+  modified - timestamp: modification date of the object
+  icon     - string: name of the icon to display (one of document, database,
+             archive, web, gis, spreadsheet, font, presentation, image,
+             diskimage, package, executable, audio, video, file)
+  category - int: category of the file can be one of:
+             0 - uncategorized
+             1 - image
+             2 - video
+             3 - audio
+             4 - document
+             5 - archive
+  thumb    - bool: true if thumbs can be created from the object
+  size     - int: size in bytes, present only for files
+  contenttype - string: content-type of the file, present only for files
+  hash     - int: 64 bit integer representing hash of the contents of the file
+             can be used to determine if two files are the same or to monitor
+             file contents for changes. Present only for files.
+  contents - array: array of metadata objects representing contents of the 
+             directory
+  isdeleted - bool: isdeleted is never false, it is present only for deleted 
+             objects, only when deleted objects are requested
+  path     - string: Full path might be provided in some cases. If you work
+             with paths and request folders by path, it will be provided.
+             Recursive listings do not have path provided.
+
+Optionally image files may have:
+  width    - width of the image in pixels
+  height   - height of the image of pixels
+Optionally audio files may have:
+  artist, album, title, genre, trackno - pretty obvious
+
+OPTIONAL GLOBAL PARAMETERS
+
+id - if set to anything, you will get it back in the reply (no matter
+successful or not). This might be useful if you pipeline requests from many
+places over single connection.
+
+timeformat - if set to "timestamp" all datetime fields will be represented as
+UTC unix timestamps, any other value leaves the default date format and is
+meaningless. The default datetime format is "Thu, 21 Mar 2013 18:31:45 +0000"
+(rfc 2822), exactly 31 bytes long.
+
+getauth - if set to any value upon successful authentication an "auth" token
+will be returned. Auth tokens are at most 64 bytes long and can be passed back
+instead of username/password credentials by "auth" parameter. This token is
+especially good for setting the "auth" cookie to keep the user logged in. 
+
+filtermeta - is set, it is supposed to be a coma (with no whitespace after it)
+separated list of fileds of metadata that you wish to receive from all calls
+returning metadata. This may be used to eliminate fields that you don't use
+and thus reduce the amount of traffic and parsing required for communications.
+If set to empty string/0 restores the default "all" value. You don't need to
+send this with every request, once per connection suffices.
+
+filterfilemeta - same as above, but only has effect of meta of the files.
+
+filderfoldermeta - same as above, but for folders.
+
+revisionid - all methods that take "fileid" or "path" as parameters to identify
+a file can also take optional parameter "revisionid" to choose a revision of
+the file. This makes sense only in some cases like for example with
+"getfilelink" or "copyfile" and is meaningless with "deletefile" as the file
+itself will be deleted in any case.
+
+logout - if set, logouts current connection. Logout is performed before
+processing any login parameters. In order to switch the logged user on a
+connection both logout and any form of authentication should be present.
+
+username/password - 
+username/passwordmd5 - 
+username/passworddigest/digest - General authentication methods.
+
+Username and password are self-explanatory.
+
+Username and passwordmd5 are the username and a plain md5() of the password, in hex, lowercase.
+
+Username and passworddigest/digest - you first need to call the "getdigest", and
+then generate password digest by calculating md5 of the password, concatenated
+with the received digest, in hex, lowercase.
+
+
+ERRORS
+
+There are number of cases when you request can't be processed as is and an
+error will be returned. Error codes are always 4 digit. They can be grouped
+into few categories depending on the type of error occurred.
+
+1xxx errors - these errors are reserved for cases when the API client
+              misbehaved. Most of the time it means that required parameters 
+              were not provided, text was provided when a number was expected,
+              or one of several valid values was expected, but the input was
+              something else. Also, trying to call a method that requires
+              login without providing any login credentials is a 1xxx error,
+              while providing bad credentials is not. Well behaved
+              applications should never receive this type of error, regardless
+              of user actions. It is advisable to find a way to send the
+              error and the error message to the application developer.
+
+19xx        - this is sub-type of 1xxx errors. It may be the case that
+              the application is misbehaving or it could be a synchronization
+              error - e.g. you are trying to monitor the progress of an upload
+              that the server knows nothing about. It might be the case that
+              the application has passed a wrong or not existing hash or it
+              could be that the upload request is still in transit and the
+              API server is yet to start processing it. If you are sure that
+              you have passed the correct parameters, it is safe to retry
+              the request later.
+
+2xxx errors - the user is trying to preform invalid operation or is providing
+              bad data. Example errors are "bad filename supplied", "file
+              not found" or "folder already exists". While a part of these can
+              be prevented in the application (notably "can not delete root
+              folder"), given the multi-user and multi client environment,
+              files that were here just a moment ago may disappear. Generally
+              these types of errors can be displayed directly to the user.
+              However, it is preferable for the applications to actually
+              understand the error codes instead of blindly displaying them.
+              Of course, in some cases this errors can be the application's
+              fault - e.g. the user wanted to open a file, but the application
+              provided incorrect folderid. Keep in mind that "user" here is
+              a quite abstract concept. If your applications is a filesystem,
+              your users are not the end users, but end users' applications.
+
+3xxx errors - these are rare errors when something can not be done and is
+              unlikely that retrying will give any better results. One example
+              of error of this type is trying to create a thumbnail from text
+              file renamed to "mypicture.jpg". It can't be classified as 1xxx
+              error as the application did nothing wrong - it received
+              "thumb": true and decided to create thumbnail. The user probably
+              didn't do anything wrong either (apart from renaming text file
+              to "mypicture.jpg", but it was probably the application that
+              decided to display the thumbnail). These errors should be ignored
+              if the unsuccessful action is not explicitly requested by user
+              (fall back for failing to display a thumbnail would be to
+              simply display an icon instead) and if the action was indeed
+              requested by user, it should be reported that the file is bad.
+
+4xxx errors - should generally be very rare. They are reserved for cases when
+              server is not willing to process you request. This generally
+              means that the API server is rate limiting you because of too
+              many requests or login tries.
+              It should be possible to retry the request at a later stage.
+
+5xxx errors - errors of this type are the ones that we work very hard to never
+              happen. Nevertheless they are still possible. These type of
+              errors generally mean that we can not satisfy the request at 
+              this time (e.g. a server is unavailable) but it is very likely
+              that the API server will be able to satisfy the request at a
+              later stage.
+
+6xxx errors - these are not real errors, but legitimate non-error answers.
+              They are used by conditional methods mostly to signal some 
+              "action not required" state.
+              
+7xxx errors - these errors generally represent error condition for which
+              neither the implementation that accesses the API nor it's user
+              are responsible. These errors should be expected when a method
+              is indicated to return one of those and should be presented to
+              the user more like a normal condition, rather than "you got an
+              error, the sky is falling down". Typical 7xxx error is for
+              example when somebody has deleted his public link and the user
+              is trying to access it.
+
+Errors codes are provided separately in errors.txt.
+
+DEFINING A TREE (SET OF FILES AND FOLDERS)
+
+Some methods can work with trees - that is set of files and folders, where
+folders can have files and subfolders inside them and so on. Because defining
+a tree is more complicated than just passing a single parameter, this
+section is dedicated to explaining how to do this and methods just mention
+that they work with input tree.
+
+A tree is defined by using one or more of the following parameters: folderid,
+folderids, fileids, excludefolderids, excludefileids.
+
+folderid - if set, contents of the folder with the given id will appear as
+           root elements of the three. The folder itself does not appear as
+           a part of the structure.
+
+folderids - if set, defines one or more folders that will appear as folders in
+           the root folder. If multiple folderids are given, they MUST be
+           separated by coma (,).
+
+fileids -  if set, files with corresponding ids will appear in the root folder
+           of the tree structure. If more than one fileid is provided, they
+           MUST be separated by coma (,).
+
+excludefolderids - if set, folders with the given id will be removed from the
+          tree structure. This is useful when you want to include a folder in
+          the tree structure with some of it's subfolders excluded.
+
+excludefileids - if set, defines fileids that are not to be included in the
+          tree structure.
+
+It is not an error not to specify any of these parameters. That will lead to
+an empty tree.
+
+It is not the same to pass single folderid as "folderid" and "folderids"
+parameter. In the first case in the root directory of the tree you will have
+as many entries as there are files and folders in the given folder. If a 
+single folderid is passed as "folderids", the resulting tree will have exactly
+one root element - the folder itself and folder's contents will be inside it.
+
+If you do not pass any of folderid, folderids or fileids normally an empty
+tree is defined. The only exception is creation of a tree from a public link.
+The default for such a tree is to have one root element with the public link
+object inside.
+
+METHODS
+
+* getdigest, auth:no - returns a digest for digest authorization as "digest"
+field. Digests are valid for 30 seconds. The "expires" key will carry the
+datetime of the digest expiration.
+
+* userinfo, auth:yes - returns information about the current user. As there is
+no specific "login" method as credentials can be passed to any method, this is
+an especially good place for logging in with no particular action in mind.
+On success it returns:
+ - email
+ - premium
+ - if premium is true: premiumexpires will be the date until the service is 
+   paid
+ - quota
+ - usedquota - both in bytes, so quite big numbers
+ - language - 2-3 characters lowercase languageid
+
+* supportedlanguages, auth: no - lists supported languages in the returned 
+  "languages" hash, where keys are language codes and values are languages
+  names
+
+* setlanguage, auth: yes - sets user's language to "language".
+
+* sendverificationemail, auth: yes - sends email to the logged in user with 
+  email activation link, takes no parameters.
+
+* verifyemail, auth: no - expects parameter "code" that is the activation 
+  code sent in validation emails. In case of valid code, validates user's
+  email address and returns "email" and "userid" of the verified user.
+  Please keep in mind that the code might be for a user, different than the
+  currently logged one (if any).
+  
+* feedback, auth: no - sends message to pCloud support. Required parameters 
+  are "mail" - email of the user, "reason" - subject of the request and
+  "message" the message itself. Optionally "name" can be provided with users
+  full name.
+
+* createfolder, auth: yes - expects either "path" string parameter 
+  (discouraged) or int "folderid" and string "name" parameters. Upon success
+  returns struct "metadata".
+
+* deletefolder, auth: yes - expects either "path" string parameter 
+  (discouraged) or int "folderid" parameter. Upon success returns struct
+  "metadata" of the deleted folder. Folders must be empty before calling
+  deletefolder.
+
+* uploadfile, auth: yes - string "path" or int "folderid" specify the target
+  directory. If both are omitted the root folder is selected.
+  Parameter string "progresshash" can be passed. Same should be passed to
+  uploadprogress method. If "nopartial" is set, partially uploaded files will
+  not be saved (that is when the connection breaks before file is read in
+  full). Multiple files can be uploaded, using POST with "multipart/form-data"
+  encoding. If passed by POST, the parameters must come before files. All
+  files are accepted, the name of the form field is ignored. Multiple files
+  can come one or more HTML file controls.
+  Filenames must be passed as "filename" property of each file, that is -
+  the way browsers send the file names.
+  If a file with the same name already exists in the directory, it is
+  overwritten and old one is saved as revision.
+  Overwriting a file with the same data does nothing except updating the 
+  "modification time" of the file. 
+  Returns two arrays - fileids and metadata.
+  
+* downloadfile, auth: yes - downloads one or more files from links suplied in
+  the"url" parameter (links separated by any amount of whitespace) to the
+  folder identified by either "path" or "folderid" (or to the root folder if
+  both are omitted). The parameter string "progresshash" can be passed. The
+  same should be passed to uploadprogress method. When monitoring progress
+  with uploadprogress the following fields will be present:
+    urlcount - number of URLs requested
+    urlready - number of URLs already downloaded
+    urlworking - number of currently downloading URLs
+    finished - true if all URLs are downloaded
+    files - array of objects, each has:
+      url - the url
+      status - one of 
+        "waiting" - the link is waiting for it's turn to be downloaded
+        "downloading" - the link is currently being downloaded
+        "ready" - the file pointed by url is already downloaded
+        "error" - error occured while downloading (timeout, 404, sever not
+                  responding)
+      size - available only for started downloads only when the server
+             supplied "Content-Length" - the size of the file
+      downloaded - available only for started downloads - number of bytes
+                   downloaded so far (goes up to size)
+      metadata - available only for "ready" downloads - the metadata of the
+                 file in the user's filesystem
+
+  The method returns when all files are downloaded (which might take time). On
+  success "metadata" array with metadata of all downloaded files is returned.
+
+* copyfile, auth: yes - takes one file and copies it as another file in the
+  user's filesystem. Expects "fileid" or "path" to identify the source file
+  and "tofolderid"+"toname" or "topath" to identify destination filename.
+  If "toname" is ommited, original filename is used. The same is true if the
+  last character of "topath" is '/' (slash), thus identifying only the target
+  folder. The target file will be separate, newly created (with current
+  creation time unless old file is overwritten) independent file. Any future
+  operations on either the source or destination file will not modify the
+  other one. This call is useful when you want to create a public link from
+  somebody else's file (shared with you).
+  If "noover" is set and file with the specified name already exists, no
+  overwriting will be preformed.
+  
+* checksumfile, auth: yes - returns "metadata", "md5" and "sha1" checksums of
+  a file identified by "fileid" or "path".
+
+* deletefile, auth: yes - deletes a file identified by "fileid" or "path". On
+  success returns file's metadata with "isdeleted" set.
+  
+* renamefile, auth: yes - renames (and/or moves) a file identified by "fileid"
+  or "path" to either "topath" (if "topath" is a foldername without new
+  filename it MUST end with slash - "/newpath/") or "tofolderid"/"toname"
+  (one or both can be provided). If the destination file already exists it
+  will be replaced atomically with the source file, in this case the metadata
+  will include "deletedfileid" with the fileid of the old file at the
+  destination, and the source and destination files revisions will be merged
+  together.
+  
+* renamefolder, auth: yes - renames (and/or moves) a folder identified by 
+  "folderid" or "path" to either "topath" (if "topath" is a existing folder
+  to place source folder without new name for the folder it MUST end with
+  slash - "/newpath/") or "tofolderid"/"toname" (one or both can be provided).
+
+* uploadprogress, auth: yes - MUST be sent to the same api server that you 
+  are currently uploading to. The parameter string "progresshash" MUST be
+  passed and must contain the same value that was passed in the upload
+  request that is currently in progress. Upon success returns fields 
+  "total" - total bytes to be transferred (that is the Content-Length of the
+  upload request), "uploaded" - bytes uploaded so far, "currentfile" - the
+  filename of the file that is currently being uploaded, 
+  "currentfileuploaded" - bytes of the file uploaded so far, "filenumber" -
+  starts from 1 is the number of the current file in the request, "files" -
+  metadata of the already uploaded files (without the current one), "finished"
+  indicates if the upload is finished or not. For finished uploads
+  "currentfile" and "currentfileuploaded" are not present. Keep in mind that
+  "total" and "uploaded" include the protocol overhead and metadata,
+  "currentfileuploaded" does not.
+
+* currentserver, auth: no - returns "ip" and "hostname" of the server you are
+  currently connected to. The hostname is guaranteed to resolve only to the IP
+  address(es) pointing to the same server. This call is useful when you need
+  to track the upload progress.
+
+* listfolder, auth: yes - expects folderid or path parameter, returns folder's
+  metadata. The metadata will have "contents" field that is array of metadatas
+  of folder's contents. If the optional parameter "recursive" is set full
+  directory tree will be returned, which means that all directories will have
+  "contents" filed. If the "showdeleted" parameter is set, deleted files and
+  folders that can be undeleted will be displayed. If "nofiles" is set, only
+  only the folder (sub)structure will be returned. If "noshares" is set, only
+  user's own folders will be displayed.
+  Recursively listing the root folder is not an expensive operation.
+
+* getcertificate, auth: yes - expects single parameter "csr" with PEM encoded
+  Certificate Signing Request. Alternatively you can instead provide parameter
+  "publickey" with your PEM encoded public key. On success returns
+  "certificate" that is a certificate that can be used from now on for SSL
+  login without any other authentication details. Keep in mind that new lines
+  will be replaced with "\n" and "/" with "\/" if you are copying it by hand.
+  To understand and test this functionality if you have openssl you can create
+  your private key:
+    openssl genrsa -out my.key 2048
+  or alternatively if you want it password protected:
+    openssl genrsa -des3 -out my.key 2048
+  then you can create a CSR, it does not matter what you fill in, just keep 
+  in mind that "common name" will be replaced, so put just anything there:
+    openssl req -new -key my.key -out my.csr
+  then send the contents of my.csr as csr parameter to this method. Do not
+  also forget to use some form of authentication also. You will get a
+  certificate back, save it to "my.crt". To make browser compatible p12
+  file that has both the certificate and your private key you can use:
+    openssl pkcs12 -export -in my.crt -inkey my.key -out my.p12
+  Import this into your browser and using https go to /userinfo without
+  any authentication parameters. You should be asked by the browser which
+  certificate to use (probably from a list of just one certificate) and after
+  that you will be logged in with the certificate. Alternatively your second 
+  step could be extracting the public key from the private one:
+    openssl rsa -in my.key -pubout -out my-public.key
+  Then send contents of my-public.key as the field "publickey". You will get a
+  certificate back.
+
+* getfilelink, auth: yes - takes "fileid" (or "path") as parameter and
+  provides links from which the file can be downloaded. If the optional
+  parameter "forcedownload" is set, the file will be served by the content
+  server with content type "application/octet-stream", which typically forces
+  user agents to save the file. Alternatively you can provide parameter
+  "contenttype" with the content-type you wish the content server to choose.
+  If these parameters are not set, the content type will depend on the
+  extension of the file. Parameter "maxspeed" may be used if you wish to limit
+  the download speed (in bytes per second) for this download. Finally you can
+  set "skipfilename" so the link generated will not include the name of the
+  file. On success it will return array "hosts" with servers that have the file.
+  The first server is the one we consider "best" for current download. In
+  "path" there will be a request you should send to server. You need to
+  construct the URL yourself by concatenating http:// or https:// with one of
+  the "hosts" (first one) and the "path".
+  
+* getvideolink, auth: yes - takes "fileid" (or "path") of a video file and
+  provides links (same way getfilelink does with "hosts" and "path") from 
+  which the video can be streamed with lower bitrate (and/or resolution). The
+  transcoded video will be in a FLV container with x264 video and mp3 audio,
+  by default the video bitrate will be adapted to the connection speed in
+  real time. By default the content servers will send appropriate content-type
+  for FLV files, this can be overridden with either "forcedownload" or
+  "contenttype" optional parameters. Optionally "skipfilename" works the same
+  way as in "getfilelink". Transcoding specific optional parameters are:
+  abitrate (audio bit rate in kilobits, from 16 to 320), vbitrate (video bit
+  rate in kilobits, from 16 to 4000), resolution (in pixels, from 64x64 to
+  1280x960, WIDTHxHEIGHT) and boolean "fixedbitrate". The video bitrate is
+  only the initial if adaptive straming is used) and the last parameter, if
+  set, turns off adaptive streaming and the stream will be with a constant
+  bitrate. The default parameters (that should generally be OK for most cases)
+  are: no change to video resolution (if you know your device resolution it
+  might be a good idea to set "resolution"), initial video bitrate of
+  1000kbit/sec with adapting to connection speed and 128kbit audio bitrate.
+!!! Generated links, not the method itself accept the HTTP GET parameter
+  "start", that if present will skip that much seconds of the video.
+  
+* getaudiolink, auth: yes - takes "fileid" (or "path") of an audio (or video)
+  file and provides links from which audio can be streamed in mp3 format.
+  Optional parameters are "abitrate", "forcedownload" and "contenttype".
+  The default bitrate is 192kbit. The link itself supports the "start" GET
+  parameter. This method can be used to play FLAC and other new formats on
+  devices that only support mp3 playback. It can also be used to extract the
+  audio track from a video.
+  
+* gethlslink, auth: yes - takes "fileid" (or "path") of a video file and
+  provides links (in the same way getfilelink does with "hosts" and "path")
+  from which a m3u8 playlist for HTTP Live Streaming can be downloaded.
+  Optional parameters are "abitrate", "vbitrate", "resolution" and
+  "skipfilename". These have the same meaning as in "getvideolink".
+  The defaults are the same as for "getvideolink". 
+
+* diff, auth: yes - list updates of the user's folders/files. Optionally takes
+  the parameter "diffid", which if provided returns only changes since that
+  "diffid". Alternatively you can provide date/time in "after" parameter and
+  you will only receive events generated after that time. Another
+  alternative to providing "diffid" or "after" is providing "last", which will
+  return "last" number of events with highest diffids (that is the last
+  events). Especially setting "last" to 0 is optimized to do nothing more
+  than return  the last "diffid".  If the optional parameter "block" is set and
+  there are no changes since the provided "diffid", the connection will block
+  until an event arrives. Blocking only works when "diffid" is provided and
+  does not work with either "after" or "last".  However, sending any
+  additional data on the blocked connection will unblock the request and an
+  empty set will be returned. This is useful when you want to monitor for
+  updates when idle and use connection for other activities when needed. Just
+  keep in mind that if you send any request on a connection that is blocked,
+  you will receive two replies - one with empty set of updates and one
+  answering your second request. If the optional "limit" parameter is provided,
+  no more than "limit" entries will be returned. On success in the reply there
+  will be "entries" array of objects and "diffid".
+  Set your current "diffid" to the provided "diffid" after you process all
+  events, during processing set your state to the "diffid" of the event
+  preferably in a single transaction with the event itself.
+  Each object will have at least keys "event", "time" and "diffid". In most
+  cases also "metadata" will be provided. "time" is the timestamp of the
+  event, "diffid" is the event's identificator. It can  be used to request
+  updates since this event. Normally diffids are incrementing integers, but
+  one can not assume that ids are consecutive as events that cancel each other
+  (e.g. createfolder, deletefolder) are not displayed if they happen to be in
+  the same list. "event" can be one of:
+    reset - client should reset it's state to empty root directory
+    createfolder - folder is created, "metadata" is provided
+    deletefolder - folder is deleted, "metadata" is provided
+    modifyfolder - folder is modified, "metadata" is provided
+    createfile   - file is created, "metadata" is provided
+    modifyfile   - file data is modified, "metadata" is provided (normally
+                    modifytime, size and hash are changed)
+    deletefile   - file is deleted, "metadata" is provided
+    requestsharein - incoming share, "share" is provided
+    acceptedsharein  - you have accepted a share request (potentially on
+                   another device), useful to decrement the counter of 
+                   "pending requests". "share" is provided. It is
+                   guaranteed that you receive "createfolder" for the
+                   "folderid" (and all the contents of the folder) of the
+                   share before you receive "acceptedshare", so it is safe to
+                   assume that you will be able to find "folderid" in the
+                   local state.
+    declinedsharein - you have declined a share request, "share" is provided
+                   (this is delivered to the declining user, not to the
+                   sending one)
+    *shareout -    same as above, but delivered to the user that is sharing
+                   the folder.
+    cancelledsharein - the sender of a share request cancelled the share
+                   request
+    removedsharein - your incoming share is removed (either by you or the
+                   other user)
+    modifiedsharein - your incoming share in is modified (permissions changed)
+    modifyuserinfo - user's information is modified, includes userinfo object
+                   with the following fields:
+                   userid, premium, premiumexpires (if premium is true),
+                   language, email, emailverified, quota, usedquota.
+                   Every user is guaranteed to have one such event in it's
+                   full state diff.
+    
+!!! look out for deletedfileid set in metadata returned from either
+!!! "modifyfile" or "createfile" when one file is atomically replaced with
+!!! another one
+                        
+    
+  Clients are advised to ignore events that they don't understand (as opposed
+to issuing errors).
+  
+For shares, a "share" object is provided with keys:
+  for *in:
+    fromuserid - userid of the user offering share
+    frommail   - e-mail of the user offering share
+  for *out:
+    touserid   - userid of the user receiving share (not available in
+                 requestshareout, declinedshareout and cancelledshareout)
+    tomail     - e-mail of the user receiving share
+  --------
+    folderid   - id of the folder
+    sharerequestid - id of the sharerequest, can be used to accept request,
+                 not available in removeshare* and modifiedshare*
+    shareid    - shareid of the share, only available in acceptedshare* and
+                 removeshare*
+    sharename  - name of the share, normally that is the name of the directory
+                 the user is sharing, not available in removeshare* and
+                 modifiedshare*
+    created    - date/time when the share request is sent, not available in
+                 removeshare* and modifiedshare*
+    expires    - date/time when the share request expires, not available in
+                 removeshare* and modifiedshare*
+    cancreate, canread, canmodify, candelete - boolean flags about permissions 
+                 you are being granted, not available in removeshare*
+    message    - optional message provided by the user offering share (may not
+                 be provided), not available in removeshare* and modifiedshare*
+
+  "time" of the event is the time of the event - even if the event is
+"createfolder", "time" is not guaranteed to be the folder's creation time.
+The folder might be somebody elses folder,created an year ago, that was just
+shared with you.
+
+!!!IMPORTANT!!! When a folder/file is created/delete/moved in or out of a
+folder, you are supposed to update modification time of the parent folder to
+the timestamp of the event.
+
+!!!IMPORTANT!!! If your state is more than 6 months old, you are advised to
+re-download all your state again, as we reserve the right to compact data that
+is more than 6 months old. Compacting means that if a deletefolder/deletefile
+event is more than 6 month old, it will disappear altogether with all 
+create/modify events. Also, if "modifyfile" is more than 6 months old, it can
+become "createfile" and the original "createfile" will disappear. That is not
+comprehensive list of compacting activities, so you should generally
+re-download from zero rather than trying to cope with compacting.
+
+* getthumblink, auth: yes - takes "fileid" (or "path") as parameter and
+provides links from which a thumbnail of the file can be downloaded.
+Thumbnails can be created only from files whose metadata has thumb value set
+to true. The parameter "size" MUST be provided, in the format "WIDTHxHEIGHT".
+The width MUST be between 16 and 2048, and divisible by either 4 or 5.
+The height MUST be between 16 and 1024, and divisible by either 4 or 5.
+By default the thumb will have the same aspect ratio as the original image,
+so the resulting thumbnail width or height (but not both)might be less than
+requested. If you want thumbnail exactly the size specified, you can set "crop"
+parameter. With "crop", thumbnails will still have the right aspect ratio, but
+if needed some rows or cols (but not both) will be cropped from both sides. So
+if you have 1024x768 image and are trying to create 128x128 thumbnail, first the
+image will be converted to 768x768 by cutting 128 columns from both sides and
+then resized to 128x128. To create a rectangular thumb from 4:3 image exactly
+1/8 is cropped from each side. By default the thumbnail is in jpeg format.
+If the "type" parameter is set to png, a png image will be produced. On success
+the same data as with "getfilelink" is returned, additionally the real image
+"size" is returned, it will match reqested "size" if "crop" is 
+specified or may differ otherwise.
+
+  Thumbs are created on first request and cached for unspecified amount of time
+(or until file) changes.
+  
+  Clients should attempt to cache thumbs if space permits. It is also advisable
+to monitor the original file's "hash" to see if it has changed. If yes, a new
+thumbnail MUST be requested.
+  
+* getthumbslinks, auth: yes - takes in "fileids" parameter coma-separated list
+of fileids and returns thumbs for all the files. "size", "type" and "crop" work
+like in getthumblink and are all the same for all files. The method returns an
+array "thumbs" with objects. Each object has "result" and "fileid" set.
+  If result is non-zero, "error" is also provided. Otherwise "path", "hosts",
+"expires" and "size are provided.
+  
+  If you need to generate multiple thumbnails "getthumbslinks" is preferable
+than multiple calls to "getthumblink" (even if pipelined), as "getthumbslinks"
+connects to multiple storage serves simultaneously to generate thumbs and in
+most cases it is just slightly slower than a single call to "getthumblink" even
+if 20 thumbnails are requested. 
+
+* getthumb, auth: yes - takes the same parameters as getthumblink, but returns
+the thumbnail over the current API connection. Getting thumbnails from API
+servers is generally NOT faster than getting them from storage servers. It
+makes sense only if you are reusing the (possibly expensive to open SSL) API
+connection.
+
+* savethumb, auth: yes - takes the same parameters as getthumblink in addition
+to "topath" or "tofolderid"+"toname" and save the generated thumbnail as a file.
+On success returns "metadata", "width" and "height". As usual by default this
+call overwrites existing files (saving the old one as revision) unless the
+"noover" parameter is set. It that case "File or folder alredy exists." error
+will be generated. If "toname" is not provided, but "tofolderid" is, the file's
+original name is used for the thumbnail. Similarly if "topath" ends with a 
+slash ('/'), the original filename is appended.
+
+* getzip, auth: yes - expects as parameter a defined tree. If "forcedownload"
+is set, the content-type will be "application/octet-stream", if not -
+"application/zip". If "filename" is provided, this is sent back as
+Content-Disposition header, forcing the browser to adopt this filename when
+downloading the file. Filename is passed unaltered, so it MUST include the
+".zip" extension.
+When successful it returns a zip archive over the current API connection with
+all the files and directories in the requested tree. If the size of the
+resulting file is going to be over 4Gb or if it contains more than 65535
+entries, the zip64 format is used, otherwise the file is plain zip. This is
+the fastest way to generate a zip file as the API server will construct the
+archive on-the-fly for you. Therefore the download will start instantly even
+with multi-gigabyte files. Since zip files do not support timezone information
+for file modification times, by default all datetime values in the resulting
+zip file will be in UTC. Alternatively "timeoffset" parameter may be provided
+with the desired time offset in the usual +xxxx or -xxxx format. Also +/-xx:xx
+and some named timezones (EET, EEST, PST, CST and like) are supported.
+
+* getziplink, auth: yes - recognizes the same parameters as getzip. Unlike
+getzip, returns a download link(s) the same way getfilelink does - returns
+path, hosts and expire. This call is less efficient than getzip as the zip
+archive is created on our servers and only then you get a download link. So
+as fast as our servers are, it may take time to create a large archive.
+The parameter "maxspeed" may be used if you wish to limit the download speed
+(in bytes per second) for this link.
+
+* savezip, auth: yes - expects the same parameters as getzip without
+"forcedownload" and "filename". Additionally expects the usual "topath" or
+"tofolderid"+"toname". If successful creates the zip archive and returns its
+metadata.
+  
+* sendverificationemail, auth: yes - sends an email to the user with a
+verification link.
+
+* verifyemail, auth: no - expects a single parameter "code" that is the same
+code that was sent by sendverificationemail.
+  
+!!! The share terminology might be a little bit confusing. "Share request" is
+in fact "share offer".
+
+!!! Shared folders or ones with pending share requests can not be deleted.
+Applications are supposed to detect error 2028 and allow the user to proceed
+to proper view/page to delete the share.
+  
+* sharefolder, auth: yes - shares a folder with another user. Share may be
+subject to confirmation from the other user. The folder to be shared is
+identified by "folderid" or "path". Optional share "name" can be provided, if
+it is not, the folder name is used as sharename. Implementations are advised to
+give opportunity to the sharing user to select the share "name", which should
+be pre-filled with the folder name. The required parameter "mail" holds the
+email address of the user with whom you are sharing the folder. The required
+parameter "permissions" sets the permissions for the folder.
+  Zero for read-only or any combination (sum/or) of:
+    1-Create permission
+    2-Modify permission
+    4-Delete permission
+    
+  Optional parameter "message" allows adding a message to pass to the receiving user.
+    
+  Folder sharing is a complicated operation and the following errors are likely
+to be returned:
+    2014 - the user's address is not verified. Implementations are advised upon
+user confirmation to call sendverificationemail and to ask the user to check
+his/her email.
+    2015 - root folder cannot be shared, this check SHOULD also be performed on
+the client.
+    2016 - one can only share folders with "ismine" set to true, implementations
+SHOULD check this locally too.
+    2017 - user does not accept requests from you or from anybody,
+implementations can not know if this is going to happen, but are expected to
+act appropriately on this error.
+           
+* cancelsharerequest, auth: yes - cancels a share request sent by the current user. The request is identified by "sharerequestid".
+
+* sharerequestinfo, auth: no - requires 'code' for a share request (as sent to user's email) and returns information about a 'share'.
+
+* listshares, auth: yes - returns two objects "shares" and "requests" both with
+sub-objects "incoming" and "outgoing". Lists current shares and share requests.
+If you set the optional parameter "norequests", then share requests will not be
+returned. Similarly if you set optional parameter "noshares", then the
+established shares will not be returned. Additionally setting "noincoming" or
+"nooutgoing"  will hide respectively "incoming" or "outgoing" sub-objects in
+the result.
+
+* acceptshare, auth: yes - accepts a share request. The request can be either
+identified by "sharerequestid" as reported by "diff" or by a "code" that comes
+from email. An optional "name" can be specified for the folder name, otherwise
+the share name will be used.
+  Implementations are advised to ask for the local name with "sharename"
+pre-filled. Optionally the target folder to mount the share may be identified
+by "folderid" or "path". If the folder is not specified, the user's default
+folder for accepting shares will be used, if no such folder exists one with
+suitable name will be created in the user's root directory. If the optional
+parameter "always" is set, the accepting user from now on will auto-accept
+requests from the sharing user to the default share folder.
+  
+* declineshare, auth: yes - declines a share request. The request can be either
+identified by "sharerequestid" as reported by "diff" or by a "code" that comes
+from email. If the optional parameter "block" is set, all future share requests
+from the offering user will be automatically declined.
+
+* removeshare, auth: yes - removes an active share, identified by "shareid" as
+returned by listshares. This can be both incoming or outgoing share.
+  
+* changeshare, auth: yes - changes permissions of a share, identified by
+"shareid" to new "permissions" (same as with "sharefolder"). Only the owner of
+the share/folder may use this method, that is - it is only allowed for outgoing
+shares.
+
+------------------
+
+  Public links
+
+!!! IMPORTANT: short public links are insecure. They can be guessed and/or
+!!! enumerated. Regular (and long) links are  secure, they are next to
+!!! impossible to guess or crack. It is advised that applications do not work
+!!! only with short links, but ask user's preference when possible. Of course
+!!! when the link is being generated especially for "writing down" or "sending
+!!! in SMS", short link may be the best choice. In any case remember that the
+!!! act of generating short link is insecure, so even if the long link is used,
+!!! the short one still can be guessed.
+  
+!!! IMPORTANT: generating public links requires verified email address. Error
+!!! number "2014" should be expected and reported without unnecessary pointing
+!!! out the fact that this is erroneous condition. Instead implementations are
+!!! expected to ask the user if she/he is willing to confirm the email address
+!!! (showing the address is a good idea), call "sendverificationemail" method
+!!! and advise the user to check his email box, click the link and retry the
+!!! operation that failed with "2014" error.
+  
+!!! IMPORTANT: public link can be generated only for files/folders owned by the
+!!! user. Implementations are advised to look out for the "ismine" metadata
+!!! field of an object before requesting a public link or (preferably and) to
+!!! expect "2026" error. In this case "copyfile" can be used to create a copy
+!!! that can be shared.
+  
+!!! IMPORTANT: look out for 7xxx errors.
+  
+* getfilepublink, auth: yes - creates and returns a public link to a file,
+identified by "fileid" or "path". Optional parameters:
+     expire:       date/time when the link will stop working
+     maxdownloads: maximum number of downloads for this file
+     maxtraffic:   maximum traffic that this link will consume (in bytes,
+                   started downloads will not be cut to fit in this limit)
+     shortlink:    if set a short link will also be generated
+  On success returns:
+     linkid:       id that can be used to delete/modify this public link
+     code:         link's code that can be used to retrieve the public link
+                   contents (with showpublink/getpublinkdownload)
+     link:         a full https link to a pcloud.com download page for this
+                   link (contains "code")
+  If "shortlink" is set when calling:
+     shortcode:    short code that can also be passed to 
+                   showpublink/getpublinkdownload & etc.
+     shortlink:    a full https link to pc.cd domain with shortcode appended
+     
+* getfolderpublink, auth: yes - creates and returns a public link to a folder,
+identified by "folderid" or "path". Same optional parameters as getfilepublink.
+"maxdownloads" in this case limits total number of downloads from this folder
+(even for the same file).
+     
+* gettreepublink, auth: yes - creates and returns a public link to a "virtual
+folder" that is defined by requested tree. Tree is identified by the following
+parameters:
+     - fileids:   comma-separated fileids
+     - folderids: comma-separated folderids
+     - folderid:  just one folderid - the contents of the folder will be dumped
+                  into the "virtual folder" instead of the folder itself
+  Also requires parameter "name" that will be the name of the virtual folder.
+Same optional parameters as with getfilepublink. The created link will have
+similar properties to ones returned by getfolderpublink with one notable
+exception - tree public links are snapshots of the requested files and folders
+at the time of creation and will not follow updates that will happen in
+the folders later.
+     
+* showpublink, auth: no - expects as parameter 'code' that can be either 'code'
+or 'shortcode' as returned by getfilepublink/getfolderpublink. Returns
+"metadata" of the object the link points to. If the object is folder, the
+"contents" field will be present (as in "listfolder") with the (recursive)
+contents of the folder. The field "isshared" of the returned "metadata" is
+always false, regardless of the real share status of the file/folder.
+     
+* getpublinkdownload, auth: no - expects as parameter 'code' and if the object
+of the link is a folder also expects 'fileid'. Returns link(s) where the file
+can be downloaded (same as getfilelink "hosts", "path" and "expire" are
+returned). Optional parameters "forcedownload", "contenttype", "skipfilename"
+and "maxspeed" work exaclty as explained in "getfilelink". This call is
+intentionally split from "showpublink". Getting download links for files you do
+not intend to download is considered "bad behaviour". "getpublinkdownload" is
+to be called when user intents to actually download the file.
+     
+* copypubfile, auth: yes - expects as parameter 'code' and if the object of the
+link is a folder also expects 'fileid'. As with "copyfile" you can either
+specify "topath" or "tofolderid" (with optional "toname"). Also the optional
+"noover" works as usual. When successful, copies the file from the public link
+to the current user's account and returns the new file's "metadata". Since no
+actual downloading or traffic happens, using this method does not increment
+the  download nor traffic counters of the public link. Consequently
+"copypubfile" can be performed even if the public link has run out of downloads
+or traffic quota. Implementations are advised to advertise this function when
+"getpublinkdownload" returns an error code identifying out of downloads or out
+of traffic condition. Unauthenticated users of course will have to first
+register/log in in this case.
+     
+* listpublinks, auth: yes - takes no parameters and returns all user's public
+links in array "publinks". For each link the following fields are provided:
+     linkid:     this id can be used to delete or modify the link
+     code, link: see "getfilepublink"
+     created:    date of the link creation
+     modified:   date of last link modification
+     metadata:   metadata of the object the link points to (directories will
+                 not have "contents")
+     downloads:  number of downloads
+     traffic:    traffic consumed so far by this link (bytes)
+  If the link has a short link:
+     shortcode, shortlink: see "getfilepublink"
+  If the link have an expiration date:
+     expires:    date/time the link will expire (or has expired)
+  If the link has download limit:
+     maxdownloads: maximum number of downloads for this link
+  If the link has traffic limit:
+     maxtraffic: maximum traffic for this link
+  It is up to the implementations to detect and properly display links that
+have expired or reached the download or traffic limit.
+  
+* listplshort, auth: yes - light version of listpublinks. There is no
+"metadata" for each link, instead each link has "isfolder" field and "fileid"
+or "folderid" field.
+  
+* deletepublink, auth: yes - takes "linkid" as parameter and deletes the public
+link with this id.
+
+* changepublink, auth: yes - takes "linkid" as parameter and modifies the
+specified link. One or more of the following optional parameters MUST be
+specified:
+     shortlink:       setting this will create a short link for the link. The 
+                      response will contain "shortcode" and "shortlink" fields.
+     deleteshortlink: setting this will delete the short link associated with 
+                      the link
+     expire:          sets a new expiration date for the link
+     deleteexpire:    if set, deletes link's expiration time (the link will not
+                      expire)
+     maxtraffic:      modifies the traffic limit, set to 0 for unlimited
+     maxdownloads:    modifies the downloads limit, set to 0 for unlimited
+     
+* getpubthumb, auth: no - same as "getthumb", but works on public file identified by 'code' (and fileid if link is to a folder)
+
+* getpubthumblink, auth: no - same as "getthumblink", but works on public file
+identified by 'code' (and fileid if link is to a folder)
+
+* getpubthumbslinks, auth: no - same as "getthumbslinks", but requres 'code' of
+a public link.
+
+* savepubthumb, auth: yes - same as "savethumb", but works on public file
+identified by code (and fileid if link is to a folder)
+
+* getpubzip, auth: no - takes as parameter public link "code" and optionally
+parameters to define a tree and streams a zip file. "filename", "forcedownload"
+and "timeoffset" optional parameters work the same way as in "getzip".
+
+* getpubziplink, auth: no - same as "getziplink" but also takes "code" of a
+public link. "getpubziplink" is slower and less efficient than "getpubzip" and
+takes time to generate the zip file as opposed to the former which starts the
+download right away.
+
+* savepubzip, auth: yes - same as "savezip" but also takes "code" of a public
+link.
+
+* getpubaudiolink, auth: no - same as "getaudiolink", but works on public file
+identified by 'code' (and fileid if link is to a folder)
+
+------------------
+
+!!! Upload links have similar semantics to public links but are quite the
+!!! opposite - they give a user opportunity to create a link which allows
+!!! uploading files directly into the user's account. Each upload link also
+!!! has an associated email address which to which emails with attachments
+!!! can be send.
+
+* createuploadlink, auth: yes - creates upload link. Expects "folderid"/"path"
+to which uploaded files will be saved. The folder must be owned by the user.
+Also SHOULD have a "comment" parameter that contains any comments/instructions
+the user is willing to provide to uploading users. Comments are the only
+information that uploading users will see (they will not know username of the
+owner nor the name of the folder they are uploading into) so implementations 
+SHOULD instruct users to fill in at least some description of what is expected
+from the uploaders (e.g. "Hey, that's Mike. Please upload any pictures you took
+at my wedding here.").
+  Optional parameter "expire" may indicate a date/time at which the link will
+stop working. Also optionally "maxspace" and "maxfiles" may limit maximum total
+size (in bytes) and total number of files that can be uploaded.
+  On success returns "uploadlinkid" that can be used to modify/delete this link,
+"link" is a full link to a page where files can be uploaded, "mail" is an email
+address that also can be used to upload files to this link and "code" is link's
+code that can be used to upload files.
+  
+* listuploadlinks, auth: yes - lists all upload links in "uploadlinks". For 
+each link "uploadlinkid", "code", "mail", "comment", target folder's "metadata",
+number of uploaded "files", total "space" occupied by uploaded files.
+Optionally if specified at creation time "expires", "maxspace" and "maxfiles"
+may be given. Also for each link the time when the link was "created" and "last
+modified" is given.
+  
+* deleteuploadlink, auth: yes - deletes upload link identified by
+"uploadlinkid".
+
+* changeuploadlink, auth: yes - modifies upload link identified by
+"uploadlinkid". If "expire" is provided it is set as expiration date of the
+link, alternatively if "deleteexpire" is set, the link's expiration date is
+removed. Also "maxspace" and "maxfiles" may be present to alter the respective
+limits. Setting either of them to 0 removes the given limit.
+  
+* showuploadlink, auth: no - expects upload link "code" and returns back the
+link's "comment" and "mail". If the link is deleted or expired, returns proper
+7xxx error, which should be expected by the implementations.
+  
+* uploadtolink, auth: no - upload file(s) to a upload link. Expects "code".
+Most things that apply to "uploadfile" also apply here, especially 
+"progresshash" can be used in the same manner to monitor upload progress with
+uploadlinkprogress.
+
+* uploadlinkprogress, auth: no - expects "progresshash" and link's "code" and
+monitors the progress of uploaded files. Returns same data as uploadprogress
+but without "files".
+  
+* copytolink, auth: yes - copies file identified by "fileid"/"path" to upload
+link identified by "code". If "toname" is provided, filename is changed to it.
+
+------------------
+
+* listrevisions, auth: yes - lists "revisions" for a given "fileid"/"path" as
+array, each element has the following fields:
+    revisionid - id of the revision
+    size       - filesize of the given revision of the file
+    hash       - file contents hash (same as in "metadata")
+    created    - date/time at which the revision was created
+  Also returns the "metadata" of the file.
+  
+* revertrevision, auth: yes - takes "fileid"/"path" and "revisionid" as
+parameters and reverts the file to a given revision. Current file contents are
+saved as new revision. On success returns new "metadata" of the file.
+  
+------------------  
+  
+* changepassword, auth: yes - takes "oldpassword" that must contain user's old
+password and "newpassword" and changes user's password.
+  New password should be at least 6 characters in length, contain at least 4
+different characters, cannot be all consecutive characters (either alphabet or 
+numbers, neither of the following is valid "abcdef", "123456", "987654")
+and cannot be all consecutive letters from a standard keyboard (no "qwerty"
+or "poiuyt"). Also the password can not start or end with whitespace.
+  
+* lostpassword, auth: no - takes as a parameter user's 'mail' and sends to this
+email address insertuctions and link to reset user's password. A successful
+reply is sent even if there is no user of the system with 'mail' for security
+reasons.
+  
+* resetpassword, auth: no - expect as parameters 'code' as sent in email by
+'lostpassword' and 'newpassword' and resets user's password to 'newpassword'.
+The new password is subject to the same checks as in changepassword.
+  
+* register, auth: no - registers a new user account. Parameter 'termsaccepted'
+MUST be set to 'yes' if the user accepted terms of service and other
+agreements. 'mail' should be user's email address and 'password' - to the user's
+chosen password. Optionally 'language' SHOULD be set to one of the supported
+languages and 'referer' SHOULD be the userid of the refering user. For the 
+password requirements see 'changepassword'.
+  
+* invite, auth: yes - returns 'url' of registration page with a referrer code
+that credits free space to user account upon user registration. Boolean
+'spacelimitreached' gives information if maximum the free space limit is
+reached by the user or not.
+
+
+------------------
+
+* file_open, auth: yes - takes as parameter "flags" which can be a combination
+of the following flags:
+    0x0002 - O_WRITE
+    0x0040 - O_CREAT
+    0x0080 - O_EXCL
+    0x0200 - O_TRUNC
+    0x0400 - O_APPEND
+  If O_CREAT is set, file_open will create the file. In this case full "path"
+or "folderid" and "name" MUST be provided for the new file. If the file already
+exists the old file will be open unless O_EXCL is set, in which case open will
+fail.
+  If O_CREAT is not set, than full "path" or "fileid" MUST be provided. The 
+function will fail if the file does not exist. 
+  O_TRUNC will truncate files when opening existing files.
+  Files opened with O_APPEND will always write to the end of file (unless you
+use pwrite). That is the only reliable method without race conditions for
+writing in the end of file when there are multiple writers.
+  You do not need to specify O_WRITE even if you intend to write to the file.
+However that will preform write access control and quota checking and you will
+get possible errors during open, not at the first write.
+  On success returns "fd" file descriptor which can be used in successive
+operations. Also returns the "fileid" of the file (useful when creating file).
+  
+
+* file_write, auth: yes - writes as much data as you send to the file
+descriptor "fd" to the current file offset and adjusts the offset. Returns
+"bytes" (number of bytes) written.
+
+* file_pwrite, auth: yes - writes as much data as you send to the file
+descriptor "fd", data is written at the "offset" that is provided as parameter.
+pwrite ignores the O_APPEND flag. The file's offset is not changed.
+
+* file_read, auth: yes - tries to read at most "count" bytes at the current
+offset of the file. If  currentofset+count<=filesize this method will satisfy
+the request and read "count" bytes, otherwise it will return just the bytes
+available (this is the only way to discover the EOF condition). Returns the
+data. 
+
+* file_pread, auth: yes - tries to read at most "count" bytes at "offset" from
+the file. Returns the data.
+
+* file_pread_ifmod, auth: yes - same as file_pread, but additionally expects
+"sha1" or "md5" parameter (hex). If the checksum of the data to be read matches
+the "sha1" or "md5" checksum, it returns error code 6000 "Not modified". This
+call is useful if the application has the data cached and wants to verify if it
+still current.
+
+* file_checksum, auth: yes - calculates checksums of "count" bytes at "offset".
+Returns "sha1", "md5" and "size" ("size" will be equal to "count" unless bytes
+past current filesize are requested to be checksummed). DO NOT use this
+function to calculate checksums of an entire, unmodified file, use
+"checksumfile" instead.
+
+* file_size, auth: yes - gives "size" (in bytes) and current "offset" for a
+given "fd".
+
+* file_truncate, auth: yes - sets file size to "length" bytes. The extra data is
+cut from the file or it is extended with zeroes as needed. The current offset
+is not modified.
+
+* file_seek, auth: yes - sets the current offset to "offset" bytes after
+beginning of the file if "whence" is 0, after current position if "whence" is 1
+or after the file end if "whence" is 2. Returns the new "offset".
+
+* file_close, auth: yes - closes the file.
+
+* file_lock, auth: yes - Locks or unlocks an "fd". Expects parameter "type",
+which can be 0 to release a lock, 1 to get a shared lock and 2 to get an
+exclusive lock. If the "offset" parameter is provided, only bytes starting
+from this offset are locked (default for offset is 0). If the "length"
+parameter is provided, only length bytes starting from "offset" are locked.
+Length of 0 means lock until the end of file (no matter how big it grows).
+  The default for "length" is also 0. If "whence" is provided it tells how to
+interpret "offset". The default whence of 0 means that offset is in bytes from
+the start of the file, 1 means it is from current offset and 2 means it is
+from the end of the file. If the parameter "get" is set, then instead of
+acquiring the lock only a test is performed if the file region can be locked.
+By default locks are blocking, that is the call will block until the lock is
+granted (except when "get" is set or request is for unlocking). If you do not
+wish the lock to block, set the "noblock" parameter. 
+  The call is always successful unless read/write error is encountered. That is,
+result will be 0 regardless if lock was granted or not. One should check the
+return field "locked" to see if lock was granted. Unlocking always sets
+"locked" to true, the same goes for blocking requests, as they are always
+successful (sooner or later). So with "result" of "0" checking the value of
+"locked" makes sense only for non-blocking locks and for "get" checks.
+!!! Locks are advisory locks, that is, they are not enforced on readers/writers
+!!! that are not trying to take a lock.
+
+!!! You may hold just one lock on a file region. If shared lock is to be
+!!! converted to an exclusive lock, the conversion is not atomic - the shared
+!!! lock MIGHT be released first, before acquiring the exclusive lock. That
+!!! happens only if the request for the exclusive lock can not be satisfied at
+!!! the moment. This is done to prevent two processes from deadlocking by first
+!!! holding a shared lock on a file and later trying to convert it to an 
+!!! exclusive lock. Processes still can deadlock by acquiring TWO locks
+!!! simultaneously (each) on different files/regions in different order.
+
+!!! The API servers do not perform any kind of deadlock detection.
+
+------------------
+
+
+

@@ -1,0 +1,1205 @@
+Error codes:
+
+1000 Log in required.
+1001 No full path or name/folderid provided.
+1002 No full path or folderid provided.
+1003 Neither csr or publickey is provided. Please create Certificate Signing Request and pass it as 'csr' parameter or send your 'publickey'.
+1004 No fileid or path provided.
+1005 Unknown content-type requested.
+1006 Please provide flags.
+1007 Invalid or closed file descriptor.
+1008 Please provide lock 'type'.
+1009 Please provide 'offset'.
+1010 Please provide 'length'.
+1011 Please provide 'count'.
+1012 Invalid lock type. Please provide type (supported values: 0, 1, 2).
+1013 Date/time format not understood.
+1014 Thumb can not be created from this file type.
+1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+1016 No full topath or toname/tofolderid provided.
+1017 Invalid 'folderid' provided.
+1018 Invalid 'fileid' provided.
+1019 Please provide 'sha1' or 'md5' checksum
+1020 Please provide language.
+1021 Language not supported.
+1022 Please provide 'code'.
+1023 Please provide 'mail' to share folder with.
+1024 Please provide 'permissions' for the share.
+1025 Please provide 'sharerequestid' or 'code' to accept a share.
+1026 Please provide 'sharerequestid'.
+1027 Please provide 'shareid'.
+1028 Please provide link 'code'.
+1029 Please provide 'fileid'.
+1030 Please provide 'linkid'.
+1031 Please provide 'oldpassword'.
+1032 Please provide 'newpassword'.
+1033 Please provide 'mail'.
+1034 Please provide 'password'.
+1035 Please provide 'comment'.
+1036 Please provide 'uploadlinkid'.
+1037 Please provide at least one of 'topath', 'tofolderid' or 'toname'.
+1038 Please provide 'fileids'.
+1039 Please provide 'name'.
+1040 Please provide 'url'.
+1041 Please provide 'message'.
+1042 Please provide 'reason'.
+1900 Upload not found
+2000 Log in failed.
+2001 Invalid file/folder name.
+2002 A component of parent directory does not exist.
+2003 Access denied. You do not have permissions to preform this operation.
+2004 File or folder alredy exists.
+2005 Directory does not exist.
+2006 Folder is not empty.
+2007 Cannot delete the root folder.
+2008 User is over quota.
+2009 File not found.
+2010 Invalid path.
+2011 Requested speed limit too low, see minspeed for minimum.
+2012 Invalid 'code' provided.
+2013 Email is already verified.
+2014 Please verify your email address to preform this action.
+2015 Can not share root folder.
+2016 You can only share your own folders.
+2017 User does not accept shares.
+2018 Invalid 'mail' provided.
+2019 Share request already exists.
+2020 You can't share a folder with yourself.
+2021 Non existing share request. It might be already accepted or cancelled by the sending user.
+2022 Wrong user to accept the share.
+2023 You are trying to place shared folder into another shared folder.
+2024 User already has access to this folder or subfolder of this folder.
+2025 Invalid shareid.
+2026 You can only share your own files or folders. Copy the file to a folder you own if you need to share it.
+2027 Invalid or already deleted link.
+2028 There are active shares or sharerequests for this folder.
+2029 Revision with provided 'revisionid' not found.
+2030 New password is the same as the old one.
+2031 Wrong 'oldpassword' provided.
+2032 Password too short. Minimum length is 6 characters.
+2033 Password can not start or end with space.
+2034 Password does not contain enough different characters. The minimum is 4.
+2035 Password can not contain only consecutive characters.
+2036 Verification 'code' expired. Please request password reset again.
+2037 You need to accept Terms of Service and all other agreements to register.
+2038 User with this email is already registered.
+2039 You have to own the folder for upload.
+2040 Given 'uploadlinkid' not found.
+2041 Connection broken.
+2042 Cannot rename the root folder.
+2043 Cannot move a folder to a subfolder of itself.
+2044 Video links can only be generated for videos.
+3000 SSL error occured. Check sslerror for more information.
+3001 Could not create thumb from the given file.
+3002 Connection to iTunes failed.
+3003 iTunes error.
+4000 Too many login tries from this IP address.
+5000 Internal error. Try again later.
+5001 Internal upload error.
+5002 Internal error, no servers available. Try again later.
+5003 Write error. Try reopening the file.
+5004 Read error. Try reopening the file.
+6000 Not modified
+7001 Invalid link 'code'.
+7002 This link is deleted by the owner.
+7003 This link is deleted bacause of copyright complaint.
+7004 This link has expired.
+7005 This link has reached its traffic limit.
+7006 This link has reached maximum downloads.
+7007 This link has reached its space limit.
+7008 This link has reached its file limit.
+
+
+Error codes and who throws them:
+
+1000 Log in required.
+  getaudiolink, getpubziplink, deletefolder, getvideolink, file_checksum, cancelsharerequest, getziplink, currentserver, sendverificationemail, file_lock, file_pwrite, getpublinkdownload, file_truncate, getpubthumblink, getthumb, listpublinks, listshares, getpubaudiolink, savepubthumb, deletefile, lostpassword, revertrevision, resetpassword, acceptshare, userinfo, diff, feedback, uploadprogress, listrevisions, copypubfile, copytolink, verifyemail, getdigest, file_write, renamefile, getthumbslinks, file_close, createuploadlink, notifyuploadlink, getfilelink, changepassword, savezip, getpubthumb, getthumblink, file_pread, renamefolder, copyfile, file_seek, gettreepublink, deletepublink, checksumfile, verifyitunespurchase, supportedlanguages, gethlslink, uploadfile, file_open, savepubzip, showpublink, listplshort, getfolderpublink, uploadtolink, createfolder, savethumb, file_pread_ifmod, setlanguage, getpubzip, deleteuploadlink, showuploadlink, getzip, listitunesproducts, sharefolder, register, declineshare, sharerequestinfo, listfolder, file_read, file_size, downloadfile, invite, getcertificate, changeuploadlink, changeshare, changepublink, listuploadlinks, normalizehash, getpubthumbslinks, uploadlinkprogress, removeshare, getfilepublink
+1001 No full path or name/folderid provided.
+  file_open, createfolder
+1002 No full path or folderid provided.
+  deletefolder, createuploadlink, renamefolder, getfolderpublink, sharefolder, listfolder
+1003 Neither csr or publickey is provided. Please create Certificate Signing Request and pass it as 'csr' parameter or send your 'publickey'.
+  getcertificate
+1004 No fileid or path provided.
+  getaudiolink, getvideolink, getpublinkdownload, getpubthumblink, getthumb, getpubaudiolink, deletefile, revertrevision, listrevisions, copypubfile, copytolink, renamefile, getfilelink, getpubthumb, getthumblink, copyfile, checksumfile, gethlslink, file_open, savethumb, getfilepublink
+1005 Unknown content-type requested.
+  getaudiolink, getvideolink, getpublinkdownload, getpubaudiolink, getfilelink
+1006 Please provide flags.
+  file_open
+1007 Invalid or closed file descriptor.
+  file_checksum, file_lock, file_pwrite, file_truncate, file_write, file_close, file_pread, file_seek, file_pread_ifmod, file_read, file_size
+1008 Please provide lock 'type'.
+  file_lock
+1009 Please provide 'offset'.
+  file_checksum, file_pwrite, file_pread, file_seek, file_pread_ifmod
+1010 Please provide 'length'.
+  file_truncate
+1011 Please provide 'count'.
+  file_checksum, file_pread, file_pread_ifmod, file_read
+1012 Invalid lock type. Please provide type (supported values: 0, 1, 2).
+  file_lock
+1013 Date/time format not understood.
+  diff, createuploadlink, gettreepublink, getfolderpublink, changeuploadlink, changepublink, getfilepublink
+1014 Thumb can not be created from this file type.
+  getpubthumblink, getthumb, savepubthumb, getpubthumb, getthumblink, savethumb
+1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  getpubthumblink, getthumb, savepubthumb, getthumbslinks, getpubthumb, getthumblink, savethumb, getpubthumbslinks
+1016 No full topath or toname/tofolderid provided.
+  savepubthumb, copypubfile, savezip, copyfile, savepubzip, savethumb
+1017 Invalid 'folderid' provided.
+  getpubziplink, getziplink, savezip, renamefolder, gettreepublink, savepubzip, getpubzip, getzip
+1018 Invalid 'fileid' provided.
+  getpubziplink, getziplink, savezip, gettreepublink, savepubzip, getpubzip, getzip
+1019 Please provide 'sha1' or 'md5' checksum
+1020 Please provide language.
+  setlanguage
+1021 Language not supported.
+  setlanguage
+1022 Please provide 'code'.
+  resetpassword, verifyemail, notifyuploadlink, sharerequestinfo, uploadlinkprogress
+1023 Please provide 'mail' to share folder with.
+  sharefolder
+1024 Please provide 'permissions' for the share.
+  sharefolder, changeshare
+1025 Please provide 'sharerequestid' or 'code' to accept a share.
+  acceptshare, declineshare
+1026 Please provide 'sharerequestid'.
+  cancelsharerequest
+1027 Please provide 'shareid'.
+  changeshare, removeshare
+1028 Please provide link 'code'.
+  getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, copypubfile, getpubthumb, savepubzip, showpublink, getpubzip, getpubthumbslinks
+1029 Please provide 'fileid'.
+  getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, getpubthumb
+1030 Please provide 'linkid'.
+  deletepublink, changepublink
+1031 Please provide 'oldpassword'.
+  changepassword
+1032 Please provide 'newpassword'.
+  resetpassword, changepassword
+1033 Please provide 'mail'.
+  lostpassword, feedback, register
+1034 Please provide 'password'.
+  register
+1035 Please provide 'comment'.
+  createuploadlink
+1036 Please provide 'uploadlinkid'.
+  deleteuploadlink, changeuploadlink
+1037 Please provide at least one of 'topath', 'tofolderid' or 'toname'.
+  renamefile, renamefolder
+1038 Please provide 'fileids'.
+  getthumbslinks, getpubthumbslinks
+1039 Please provide 'name'.
+  gettreepublink
+1040 Please provide 'url'.
+  downloadfile
+1041 Please provide 'message'.
+  feedback
+1042 Please provide 'reason'.
+  feedback
+1900 Upload not found
+  uploadprogress, uploadlinkprogress
+2000 Log in failed.
+  getaudiolink, getpubziplink, deletefolder, getvideolink, file_checksum, cancelsharerequest, getziplink, currentserver, sendverificationemail, file_lock, file_pwrite, getpublinkdownload, file_truncate, getpubthumblink, getthumb, listpublinks, listshares, getpubaudiolink, savepubthumb, deletefile, lostpassword, revertrevision, resetpassword, acceptshare, userinfo, diff, feedback, uploadprogress, listrevisions, copypubfile, copytolink, verifyemail, getdigest, file_write, renamefile, getthumbslinks, file_close, createuploadlink, notifyuploadlink, getfilelink, changepassword, savezip, getpubthumb, getthumblink, file_pread, renamefolder, copyfile, file_seek, gettreepublink, deletepublink, checksumfile, verifyitunespurchase, supportedlanguages, gethlslink, uploadfile, file_open, savepubzip, showpublink, listplshort, getfolderpublink, uploadtolink, createfolder, savethumb, file_pread_ifmod, setlanguage, getpubzip, deleteuploadlink, showuploadlink, getzip, listitunesproducts, sharefolder, register, declineshare, sharerequestinfo, listfolder, file_read, file_size, downloadfile, invite, getcertificate, changeuploadlink, changeshare, changepublink, listuploadlinks, normalizehash, getpubthumbslinks, uploadlinkprogress, removeshare, getfilepublink
+2001 Invalid file/folder name.
+  savepubthumb, acceptshare, copypubfile, copytolink, renamefile, savezip, renamefolder, copyfile, uploadfile, file_open, savepubzip, uploadtolink, createfolder, savethumb, sharefolder
+2002 A component of parent directory does not exist.
+  getaudiolink, getvideolink, getpublinkdownload, getpubthumblink, getthumb, getpubaudiolink, savepubthumb, deletefile, revertrevision, acceptshare, listrevisions, copypubfile, copytolink, renamefile, getfilelink, savezip, getpubthumb, getthumblink, copyfile, checksumfile, gethlslink, file_open, savepubzip, createfolder, savethumb, getfilepublink
+2003 Access denied. You do not have permissions to preform this operation.
+  getaudiolink, deletefolder, getvideolink, file_pwrite, getthumb, savepubthumb, deletefile, revertrevision, listrevisions, copypubfile, copytolink, file_write, renamefile, getfilelink, savezip, getthumblink, renamefolder, copyfile, checksumfile, gethlslink, uploadfile, file_open, savepubzip, createfolder, savethumb, listfolder, downloadfile
+2004 File or folder alredy exists.
+  savepubthumb, copypubfile, savezip, renamefolder, copyfile, file_open, savepubzip, createfolder, savethumb
+2005 Directory does not exist.
+  deletefolder, renamefile, createuploadlink, renamefolder, uploadfile, getfolderpublink, sharefolder, listfolder, downloadfile
+2006 Folder is not empty.
+  deletefolder
+2007 Cannot delete the root folder.
+  deletefolder
+2008 User is over quota.
+  file_pwrite, savepubthumb, copypubfile, file_write, renamefile, savezip, renamefolder, copyfile, uploadfile, file_open, savepubzip, savethumb, downloadfile
+2009 File not found.
+  getaudiolink, getvideolink, getziplink, getpublinkdownload, getpubthumblink, getthumb, getpubaudiolink, savepubthumb, deletefile, revertrevision, listrevisions, copypubfile, copytolink, renamefile, getfilelink, savezip, getpubthumb, getthumblink, copyfile, gettreepublink, checksumfile, gethlslink, file_open, savethumb, getzip, getfilepublink
+2010 Invalid path.
+  getaudiolink, getvideolink, getpublinkdownload, getpubthumblink, getthumb, getpubaudiolink, deletefile, revertrevision, listrevisions, copypubfile, copytolink, renamefile, getfilelink, getpubthumb, getthumblink, copyfile, checksumfile, gethlslink, file_open, savethumb, getfilepublink
+2011 Requested speed limit too low, see minspeed for minimum.
+  getpubziplink, getziplink, getpublinkdownload, getfilelink
+2012 Invalid 'code' provided.
+  resetpassword, verifyemail, notifyuploadlink
+2013 Email is already verified.
+  sendverificationemail, verifyemail
+2014 Please verify your email address to preform this action.
+  createuploadlink, gettreepublink, getfolderpublink, sharefolder, getfilepublink
+2015 Can not share root folder.
+  getfolderpublink, sharefolder
+2016 You can only share your own folders.
+  sharefolder
+2017 User does not accept shares.
+  sharefolder
+2018 Invalid 'mail' provided.
+  feedback, sharefolder, register
+2019 Share request already exists.
+  sharefolder
+2020 You can't share a folder with yourself.
+  acceptshare, sharefolder
+2021 Non existing share request. It might be already accepted or cancelled by the sending user.
+  cancelsharerequest, acceptshare, declineshare, sharerequestinfo
+2022 Wrong user to accept the share.
+  acceptshare, declineshare
+2023 You are trying to place shared folder into another shared folder.
+  acceptshare, renamefolder
+2024 User already has access to this folder or subfolder of this folder.
+  acceptshare, sharefolder
+2025 Invalid shareid.
+  changeshare, removeshare
+2026 You can only share your own files or folders. Copy the file to a folder you own if you need to share it.
+  getfolderpublink, getfilepublink
+2027 Invalid or already deleted link.
+  deletepublink, changepublink
+2028 There are active shares or sharerequests for this folder.
+  deletefolder
+2029 Revision with provided 'revisionid' not found.
+2030 New password is the same as the old one.
+  changepassword
+2031 Wrong 'oldpassword' provided.
+  changepassword
+2032 Password too short. Minimum length is 6 characters.
+  resetpassword, changepassword, register
+2033 Password can not start or end with space.
+  resetpassword, changepassword, register
+2034 Password does not contain enough different characters. The minimum is 4.
+  resetpassword, changepassword, register
+2035 Password can not contain only consecutive characters.
+  resetpassword, changepassword, register
+2036 Verification 'code' expired. Please request password reset again.
+  resetpassword
+2037 You need to accept Terms of Service and all other agreements to register.
+  register
+2038 User with this email is already registered.
+  register
+2039 You have to own the folder for upload.
+  createuploadlink
+2040 Given 'uploadlinkid' not found.
+  deleteuploadlink, changeuploadlink
+2041 Connection broken.
+  uploadfile, uploadtolink
+2042 Cannot rename the root folder.
+  renamefolder
+2043 Cannot move a folder to a subfolder of itself.
+  renamefolder
+2044 Video links can only be generated for videos.
+  getaudiolink, getvideolink, getpubaudiolink, gethlslink
+3000 SSL error occured. Check sslerror for more information.
+  getcertificate
+3001 Could not create thumb from the given file.
+  getpubthumblink, getthumb, savepubthumb, getpubthumb, getthumblink, savethumb
+3002 Connection to iTunes failed.
+  verifyitunespurchase
+3003 iTunes error.
+  verifyitunespurchase
+4000 Too many login tries from this IP address.
+  getaudiolink, getpubziplink, deletefolder, getvideolink, file_checksum, cancelsharerequest, getziplink, currentserver, sendverificationemail, file_lock, file_pwrite, getpublinkdownload, file_truncate, getpubthumblink, getthumb, listpublinks, listshares, getpubaudiolink, savepubthumb, deletefile, lostpassword, revertrevision, resetpassword, acceptshare, userinfo, diff, feedback, uploadprogress, listrevisions, copypubfile, copytolink, verifyemail, getdigest, file_write, renamefile, getthumbslinks, file_close, createuploadlink, notifyuploadlink, getfilelink, changepassword, savezip, getpubthumb, getthumblink, file_pread, renamefolder, copyfile, file_seek, gettreepublink, deletepublink, checksumfile, verifyitunespurchase, supportedlanguages, gethlslink, uploadfile, file_open, savepubzip, showpublink, listplshort, getfolderpublink, uploadtolink, createfolder, savethumb, file_pread_ifmod, setlanguage, getpubzip, deleteuploadlink, showuploadlink, getzip, listitunesproducts, sharefolder, register, declineshare, sharerequestinfo, listfolder, file_read, file_size, downloadfile, invite, getcertificate, changeuploadlink, changeshare, changepublink, listuploadlinks, normalizehash, getpubthumbslinks, uploadlinkprogress, removeshare, getfilepublink
+5000 Internal error. Try again later.
+  deletefolder, listpublinks, savepubthumb, deletefile, revertrevision, resetpassword, acceptshare, diff, copypubfile, copytolink, verifyemail, renamefile, createuploadlink, changepassword, savezip, renamefolder, copyfile, gettreepublink, deletepublink, checksumfile, verifyitunespurchase, uploadfile, file_open, savepubzip, getfolderpublink, uploadtolink, createfolder, savethumb, setlanguage, deleteuploadlink, sharefolder, register, listfolder, downloadfile, invite, changeuploadlink, changeshare, changepublink, removeshare, getfilepublink
+5001 Internal upload error.
+  getpubziplink, getziplink, savezip, uploadfile, file_open, savepubzip, uploadtolink, downloadfile
+5002 Internal error, no servers available. Try again later.
+  getaudiolink, getpubziplink, getvideolink, getziplink, getpublinkdownload, getpubthumblink, getthumb, getpubaudiolink, getfilelink, getpubthumb, getthumblink, gethlslink
+5003 Write error. Try reopening the file.
+  file_pwrite, file_truncate, file_write
+5004 Read error. Try reopening the file.
+  file_checksum, file_lock, file_pread, file_seek, file_pread_ifmod, file_read, file_size
+6000 Not modified
+  file_pread_ifmod
+7001 Invalid link 'code'.
+  getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, getpubthumb, savepubzip, showpublink, getpubzip, getpubthumbslinks
+7002 This link is deleted by the owner.
+  getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, copytolink, getpubthumb, savepubzip, showpublink, uploadtolink, getpubzip, showuploadlink, getpubthumbslinks
+7003 This link is deleted bacause of copyright complaint.
+7004 This link has expired.
+  getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, copytolink, getpubthumb, savepubzip, showpublink, uploadtolink, getpubzip, showuploadlink, getpubthumbslinks
+7005 This link has reached its traffic limit.
+  getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, getpubthumb, savepubzip, showpublink, getpubzip, getpubthumbslinks
+7006 This link has reached maximum downloads.
+  getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, getpubthumb, savepubzip, showpublink, getpubzip, getpubthumbslinks
+7007 This link has reached its space limit.
+  copytolink, uploadtolink, showuploadlink
+7008 This link has reached its file limit.
+  copytolink, uploadtolink, showuploadlink
+
+
+Methods and error codes they throw:
+
+getaudiolink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1005 Unknown content-type requested.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  2044 Video links can only be generated for videos.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+getpubziplink
+  1000 Log in required.
+  1017 Invalid 'folderid' provided.
+  1018 Invalid 'fileid' provided.
+  1028 Please provide link 'code'.
+  2000 Log in failed.
+  2011 Requested speed limit too low, see minspeed for minimum.
+  4000 Too many login tries from this IP address.
+  5001 Internal upload error.
+  5002 Internal error, no servers available. Try again later.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+deletefolder
+  1000 Log in required.
+  1002 No full path or folderid provided.
+  2000 Log in failed.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2005 Directory does not exist.
+  2006 Folder is not empty.
+  2007 Cannot delete the root folder.
+  2028 There are active shares or sharerequests for this folder.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+getvideolink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1005 Unknown content-type requested.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  2044 Video links can only be generated for videos.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+file_checksum
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  1009 Please provide 'offset'.
+  1011 Please provide 'count'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5004 Read error. Try reopening the file.
+cancelsharerequest
+  1000 Log in required.
+  1026 Please provide 'sharerequestid'.
+  2000 Log in failed.
+  2021 Non existing share request. It might be already accepted or cancelled by the sending user.
+  4000 Too many login tries from this IP address.
+getziplink
+  1000 Log in required.
+  1017 Invalid 'folderid' provided.
+  1018 Invalid 'fileid' provided.
+  2000 Log in failed.
+  2009 File not found.
+  2011 Requested speed limit too low, see minspeed for minimum.
+  4000 Too many login tries from this IP address.
+  5001 Internal upload error.
+  5002 Internal error, no servers available. Try again later.
+currentserver
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+sendverificationemail
+  1000 Log in required.
+  2000 Log in failed.
+  2013 Email is already verified.
+  4000 Too many login tries from this IP address.
+file_lock
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  1008 Please provide lock 'type'.
+  1012 Invalid lock type. Please provide type (supported values: 0, 1, 2).
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5004 Read error. Try reopening the file.
+file_pwrite
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  1009 Please provide 'offset'.
+  2000 Log in failed.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2008 User is over quota.
+  4000 Too many login tries from this IP address.
+  5003 Write error. Try reopening the file.
+getpublinkdownload
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1005 Unknown content-type requested.
+  1028 Please provide link 'code'.
+  1029 Please provide 'fileid'.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2009 File not found.
+  2010 Invalid path.
+  2011 Requested speed limit too low, see minspeed for minimum.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+file_truncate
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  1010 Please provide 'length'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5003 Write error. Try reopening the file.
+getpubthumblink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1014 Thumb can not be created from this file type.
+  1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  1028 Please provide link 'code'.
+  1029 Please provide 'fileid'.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2009 File not found.
+  2010 Invalid path.
+  3001 Could not create thumb from the given file.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+getthumb
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1014 Thumb can not be created from this file type.
+  1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  3001 Could not create thumb from the given file.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+listpublinks
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+listshares
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+getpubaudiolink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1005 Unknown content-type requested.
+  1028 Please provide link 'code'.
+  1029 Please provide 'fileid'.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2009 File not found.
+  2010 Invalid path.
+  2044 Video links can only be generated for videos.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+savepubthumb
+  1000 Log in required.
+  1014 Thumb can not be created from this file type.
+  1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  1016 No full topath or toname/tofolderid provided.
+  1029 Please provide 'fileid'.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  2008 User is over quota.
+  2009 File not found.
+  3001 Could not create thumb from the given file.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+deletefile
+  1000 Log in required.
+  1004 No fileid or path provided.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+lostpassword
+  1000 Log in required.
+  1033 Please provide 'mail'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+revertrevision
+  1000 Log in required.
+  1004 No fileid or path provided.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+resetpassword
+  1000 Log in required.
+  1022 Please provide 'code'.
+  1032 Please provide 'newpassword'.
+  2000 Log in failed.
+  2012 Invalid 'code' provided.
+  2032 Password too short. Minimum length is 6 characters.
+  2033 Password can not start or end with space.
+  2034 Password does not contain enough different characters. The minimum is 4.
+  2035 Password can not contain only consecutive characters.
+  2036 Verification 'code' expired. Please request password reset again.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+acceptshare
+  1000 Log in required.
+  1025 Please provide 'sharerequestid' or 'code' to accept a share.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2020 You can't share a folder with yourself.
+  2021 Non existing share request. It might be already accepted or cancelled by the sending user.
+  2022 Wrong user to accept the share.
+  2023 You are trying to place shared folder into another shared folder.
+  2024 User already has access to this folder or subfolder of this folder.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+userinfo
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+diff
+  1000 Log in required.
+  1013 Date/time format not understood.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+feedback
+  1000 Log in required.
+  1033 Please provide 'mail'.
+  1041 Please provide 'message'.
+  1042 Please provide 'reason'.
+  2000 Log in failed.
+  2018 Invalid 'mail' provided.
+  4000 Too many login tries from this IP address.
+uploadprogress
+  1000 Log in required.
+  1900 Upload not found
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+listrevisions
+  1000 Log in required.
+  1004 No fileid or path provided.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+copypubfile
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1016 No full topath or toname/tofolderid provided.
+  1028 Please provide link 'code'.
+  1029 Please provide 'fileid'.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  2008 User is over quota.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+copytolink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7007 This link has reached its space limit.
+  7008 This link has reached its file limit.
+verifyemail
+  1000 Log in required.
+  1022 Please provide 'code'.
+  2000 Log in failed.
+  2012 Invalid 'code' provided.
+  2013 Email is already verified.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+getdigest
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+file_write
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  2000 Log in failed.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2008 User is over quota.
+  4000 Too many login tries from this IP address.
+  5003 Write error. Try reopening the file.
+renamefile
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1037 Please provide at least one of 'topath', 'tofolderid' or 'toname'.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2005 Directory does not exist.
+  2008 User is over quota.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+getthumbslinks
+  1000 Log in required.
+  1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  1038 Please provide 'fileids'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+file_close
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+createuploadlink
+  1000 Log in required.
+  1002 No full path or folderid provided.
+  1013 Date/time format not understood.
+  1035 Please provide 'comment'.
+  2000 Log in failed.
+  2005 Directory does not exist.
+  2014 Please verify your email address to preform this action.
+  2039 You have to own the folder for upload.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+notifyuploadlink
+  1000 Log in required.
+  1022 Please provide 'code'.
+  2000 Log in failed.
+  2012 Invalid 'code' provided.
+  4000 Too many login tries from this IP address.
+getfilelink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1005 Unknown content-type requested.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  2011 Requested speed limit too low, see minspeed for minimum.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+changepassword
+  1000 Log in required.
+  1031 Please provide 'oldpassword'.
+  1032 Please provide 'newpassword'.
+  2000 Log in failed.
+  2030 New password is the same as the old one.
+  2031 Wrong 'oldpassword' provided.
+  2032 Password too short. Minimum length is 6 characters.
+  2033 Password can not start or end with space.
+  2034 Password does not contain enough different characters. The minimum is 4.
+  2035 Password can not contain only consecutive characters.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+savezip
+  1000 Log in required.
+  1016 No full topath or toname/tofolderid provided.
+  1017 Invalid 'folderid' provided.
+  1018 Invalid 'fileid' provided.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  2008 User is over quota.
+  2009 File not found.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  5001 Internal upload error.
+getpubthumb
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1014 Thumb can not be created from this file type.
+  1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  1028 Please provide link 'code'.
+  1029 Please provide 'fileid'.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2009 File not found.
+  2010 Invalid path.
+  3001 Could not create thumb from the given file.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+getthumblink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1014 Thumb can not be created from this file type.
+  1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  3001 Could not create thumb from the given file.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+file_pread
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  1009 Please provide 'offset'.
+  1011 Please provide 'count'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5004 Read error. Try reopening the file.
+renamefolder
+  1000 Log in required.
+  1002 No full path or folderid provided.
+  1017 Invalid 'folderid' provided.
+  1037 Please provide at least one of 'topath', 'tofolderid' or 'toname'.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  2005 Directory does not exist.
+  2008 User is over quota.
+  2023 You are trying to place shared folder into another shared folder.
+  2042 Cannot rename the root folder.
+  2043 Cannot move a folder to a subfolder of itself.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+copyfile
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1016 No full topath or toname/tofolderid provided.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  2008 User is over quota.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+file_seek
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  1009 Please provide 'offset'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5004 Read error. Try reopening the file.
+gettreepublink
+  1000 Log in required.
+  1013 Date/time format not understood.
+  1017 Invalid 'folderid' provided.
+  1018 Invalid 'fileid' provided.
+  1039 Please provide 'name'.
+  2000 Log in failed.
+  2009 File not found.
+  2014 Please verify your email address to preform this action.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+deletepublink
+  1000 Log in required.
+  1030 Please provide 'linkid'.
+  2000 Log in failed.
+  2027 Invalid or already deleted link.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+checksumfile
+  1000 Log in required.
+  1004 No fileid or path provided.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+verifyitunespurchase
+  1000 Log in required.
+  2000 Log in failed.
+  3002 Connection to iTunes failed.
+  3003 iTunes error.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+supportedlanguages
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+gethlslink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2009 File not found.
+  2010 Invalid path.
+  2044 Video links can only be generated for videos.
+  4000 Too many login tries from this IP address.
+  5002 Internal error, no servers available. Try again later.
+uploadfile
+  1000 Log in required.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2005 Directory does not exist.
+  2008 User is over quota.
+  2041 Connection broken.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  5001 Internal upload error.
+file_open
+  1000 Log in required.
+  1001 No full path or name/folderid provided.
+  1004 No fileid or path provided.
+  1006 Please provide flags.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  2008 User is over quota.
+  2009 File not found.
+  2010 Invalid path.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  5001 Internal upload error.
+savepubzip
+  1000 Log in required.
+  1016 No full topath or toname/tofolderid provided.
+  1017 Invalid 'folderid' provided.
+  1018 Invalid 'fileid' provided.
+  1028 Please provide link 'code'.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  2008 User is over quota.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  5001 Internal upload error.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+showpublink
+  1000 Log in required.
+  1028 Please provide link 'code'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+listplshort
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+getfolderpublink
+  1000 Log in required.
+  1002 No full path or folderid provided.
+  1013 Date/time format not understood.
+  2000 Log in failed.
+  2005 Directory does not exist.
+  2014 Please verify your email address to preform this action.
+  2015 Can not share root folder.
+  2026 You can only share your own files or folders. Copy the file to a folder you own if you need to share it.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+uploadtolink
+  1000 Log in required.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2041 Connection broken.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  5001 Internal upload error.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7007 This link has reached its space limit.
+  7008 This link has reached its file limit.
+createfolder
+  1000 Log in required.
+  1001 No full path or name/folderid provided.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+savethumb
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1014 Thumb can not be created from this file type.
+  1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  1016 No full topath or toname/tofolderid provided.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2002 A component of parent directory does not exist.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2004 File or folder alredy exists.
+  2008 User is over quota.
+  2009 File not found.
+  2010 Invalid path.
+  3001 Could not create thumb from the given file.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+file_pread_ifmod
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  1009 Please provide 'offset'.
+  1011 Please provide 'count'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5004 Read error. Try reopening the file.
+  6000 Not modified
+setlanguage
+  1000 Log in required.
+  1020 Please provide language.
+  1021 Language not supported.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+getpubzip
+  1000 Log in required.
+  1017 Invalid 'folderid' provided.
+  1018 Invalid 'fileid' provided.
+  1028 Please provide link 'code'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+deleteuploadlink
+  1000 Log in required.
+  1036 Please provide 'uploadlinkid'.
+  2000 Log in failed.
+  2040 Given 'uploadlinkid' not found.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+showuploadlink
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7007 This link has reached its space limit.
+  7008 This link has reached its file limit.
+getzip
+  1000 Log in required.
+  1017 Invalid 'folderid' provided.
+  1018 Invalid 'fileid' provided.
+  2000 Log in failed.
+  2009 File not found.
+  4000 Too many login tries from this IP address.
+listitunesproducts
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+sharefolder
+  1000 Log in required.
+  1002 No full path or folderid provided.
+  1023 Please provide 'mail' to share folder with.
+  1024 Please provide 'permissions' for the share.
+  2000 Log in failed.
+  2001 Invalid file/folder name.
+  2005 Directory does not exist.
+  2014 Please verify your email address to preform this action.
+  2015 Can not share root folder.
+  2016 You can only share your own folders.
+  2017 User does not accept shares.
+  2018 Invalid 'mail' provided.
+  2019 Share request already exists.
+  2020 You can't share a folder with yourself.
+  2024 User already has access to this folder or subfolder of this folder.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+register
+  1000 Log in required.
+  1033 Please provide 'mail'.
+  1034 Please provide 'password'.
+  2000 Log in failed.
+  2018 Invalid 'mail' provided.
+  2032 Password too short. Minimum length is 6 characters.
+  2033 Password can not start or end with space.
+  2034 Password does not contain enough different characters. The minimum is 4.
+  2035 Password can not contain only consecutive characters.
+  2037 You need to accept Terms of Service and all other agreements to register.
+  2038 User with this email is already registered.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+declineshare
+  1000 Log in required.
+  1025 Please provide 'sharerequestid' or 'code' to accept a share.
+  2000 Log in failed.
+  2021 Non existing share request. It might be already accepted or cancelled by the sending user.
+  2022 Wrong user to accept the share.
+  4000 Too many login tries from this IP address.
+sharerequestinfo
+  1000 Log in required.
+  1022 Please provide 'code'.
+  2000 Log in failed.
+  2021 Non existing share request. It might be already accepted or cancelled by the sending user.
+  4000 Too many login tries from this IP address.
+listfolder
+  1000 Log in required.
+  1002 No full path or folderid provided.
+  2000 Log in failed.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2005 Directory does not exist.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+file_read
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  1011 Please provide 'count'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5004 Read error. Try reopening the file.
+file_size
+  1000 Log in required.
+  1007 Invalid or closed file descriptor.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5004 Read error. Try reopening the file.
+downloadfile
+  1000 Log in required.
+  1040 Please provide 'url'.
+  2000 Log in failed.
+  2003 Access denied. You do not have permissions to preform this operation.
+  2005 Directory does not exist.
+  2008 User is over quota.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+  5001 Internal upload error.
+invite
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+getcertificate
+  1000 Log in required.
+  1003 Neither csr or publickey is provided. Please create Certificate Signing Request and pass it as 'csr' parameter or send your 'publickey'.
+  2000 Log in failed.
+  3000 SSL error occured. Check sslerror for more information.
+  4000 Too many login tries from this IP address.
+changeuploadlink
+  1000 Log in required.
+  1013 Date/time format not understood.
+  1036 Please provide 'uploadlinkid'.
+  2000 Log in failed.
+  2040 Given 'uploadlinkid' not found.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+changeshare
+  1000 Log in required.
+  1024 Please provide 'permissions' for the share.
+  1027 Please provide 'shareid'.
+  2000 Log in failed.
+  2025 Invalid shareid.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+changepublink
+  1000 Log in required.
+  1013 Date/time format not understood.
+  1030 Please provide 'linkid'.
+  2000 Log in failed.
+  2027 Invalid or already deleted link.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+listuploadlinks
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+normalizehash
+  1000 Log in required.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+getpubthumbslinks
+  1000 Log in required.
+  1015 Please provide valid thumb size. Width and height must be divisible either by 4 or 5 and must be between 16 and 2048 (1024 for height).
+  1028 Please provide link 'code'.
+  1038 Please provide 'fileids'.
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+  7001 Invalid link 'code'.
+  7002 This link is deleted by the owner.
+  7004 This link has expired.
+  7005 This link has reached its traffic limit.
+  7006 This link has reached maximum downloads.
+uploadlinkprogress
+  1000 Log in required.
+  1022 Please provide 'code'.
+  1900 Upload not found
+  2000 Log in failed.
+  4000 Too many login tries from this IP address.
+removeshare
+  1000 Log in required.
+  1027 Please provide 'shareid'.
+  2000 Log in failed.
+  2025 Invalid shareid.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
+getfilepublink
+  1000 Log in required.
+  1004 No fileid or path provided.
+  1013 Date/time format not understood.
+  2000 Log in failed.
+  2002 A component of parent directory does not exist.
+  2009 File not found.
+  2010 Invalid path.
+  2014 Please verify your email address to preform this action.
+  2026 You can only share your own files or folders. Copy the file to a folder you own if you need to share it.
+  4000 Too many login tries from this IP address.
+  5000 Internal error. Try again later.
