@@ -1,19 +1,19 @@
 GENERAL
 
-All api calls consist of a "call name", called from now on "method", and
+All API calls consist of a "call name", called from now on "method", and
 multiple parameters.
 
 Some parameters can be bundled with all methods and some are method specific.
 
 Authentication is not required for all methods.
 
-So far only HTTP/HTTPS interface is available. Method name is passed as
+At this time the only available interface is HTTP/HTTPS. Method name is passed as
 request path (you should request /list to call "list" method) and parameters
 are passed by either GET, POST or using a cookie (and are set in this order,
-so cookie with some name will override the same GET parameter).
+so that cookie with some name will override the same GET parameter).
 
-Responses are normally JSON array with multiple fields. The key "result" is
-always present. Normally result=0 means success while a non-zero result means 
+Response is normally JSON array with multiple fields. The key "result" is
+always present. Normally result:0 means success while a non-zero result means 
 an error. A non-zero result also sets the "error" key with an error message.
 Error codes passed by result can be seen in ERRORS array of settings.lua.
 When there is an error HTTP header "X-Error: xxxx" is sent with the error code.
@@ -32,7 +32,7 @@ The root folder of every user always has folderid of "0".
 Full paths always start with "/". Trailing slashes MUST NOT be present.
 
 Implementations MUST accept 64 bit numbers for all ids and especially when 
-dealing with quotas and filesizes (that are in bytes).
+dealing with quotas and file sizes (that are in bytes).
 
 Data/files can be uploaded over HTTP by using the POST method and
 "multipart/form-data" encoding, or using a PUT request. 
@@ -74,7 +74,7 @@ preferable to use locks or dedicated thread responsible for all the
 reading/writing to the socket.
 
 Initially connections open to the server have quite low inactivity timeout.
-However once your authenticate over the connection the timeout will be quite
+However once you authenticate over the connection the timeout will be quite
 long (over an hour).
 
 The API server may in some cases send compressed content if the client
@@ -100,11 +100,11 @@ The request to the API servers starts with 16 bit length of the request, the
 request itself and optional data. The length obviously limits the request length
 to 64K and DOES NOT include the length of the data that may be present.
 
-The first byte of the request gives the length of the name of the method
-(bits 0-6) and indicates if the request has data (bit 7). If the highest bit
-(7) is set, than the following 8 bytes represent 64 bit number, that is the
-length of the data that comes immediately after the request. The next
-method_len bytes are the name of the method to be called.
+The first byte of the request gives the length of the name of the 
+method - method_len (bits 0-6) and indicates if the request has data (bit 7).
+If the highest bit(7) is set, than the following 8 bytes represent 64 bit 
+number, that is thelength of the data that comes immediately after the request.
+The next method_len bytes are the name of the method to be called.
 
 The following one byte represent 8 bit number containing the number of
 parameters passed.
@@ -118,9 +118,9 @@ There are 3 types of parameters passed to API servers (with their code):
 2 - boolean
 
 For each parameter, the first byte represent the parameter type index in two
-highest bits (6-7) and the length of the parameter name in the low 6 bits (0-5).
-The following param_name_len bytes are the name of the parameter. If the
-parameter is :
+highest bits (6-7) and the length of the parameter name ( param_name_len ) in
+ the low 6 bits (0-5).The following param_name_len bytes are the name of the 
+parameter. If the parameter is :
 
 * string, 4 byte length and string contents follow
 * number, 8 byte (64 bit) number representation follow
@@ -264,7 +264,7 @@ call (if it's successful) with writeall() and get the result with get_result().
 
 binresult *get_result(apisock *sock);
 
-  Reads and parses the result of the previous command. Non-NULL return value
+  Reads and parses the first waiting result sent command . Non-NULL return value
 indicates success and needs to be deallocated with free().
 
 int writeall(apisock *sock, const void *ptr, size_t len)
@@ -316,7 +316,7 @@ Writing data to file with file_write/file_pwrite methods works the same way as
 with uploading files - you can either use the PUT method, where the data of
 with size of "Content-Length" will be sent after the headers. Or you can use
 POST with "multipart/form-data" encoding. In this case the data should be send 
-in the field named "data" that should be after any post parameters (as with
+in the field named "data" found after any post parameters (as with
 uploading files).
 
 FILENAMES
@@ -451,7 +451,8 @@ username/passworddigest/digest - General authentication methods.
 
 Username and password are self-explanatory.
 
-Username and passwordmd5 are the username and a plain md5() of the password, in hex, lowercase.
+Username and passwordmd5 are the username and a plain md5() of the password, in hex,
+lowercase.
 
 Username and passworddigest/digest - you first need to call the "getdigest", and
 then generate password digest by calculating md5 of the password, concatenated
@@ -626,11 +627,11 @@ On success it returns:
 
 * createfolder, auth: yes - expects either "path" string parameter 
   (discouraged) or int "folderid" and string "name" parameters. Upon success
-  returns struct "metadata".
+  returns "metadata" structure.
 
 * deletefolder, auth: yes - expects either "path" string parameter 
-  (discouraged) or int "folderid" parameter. Upon success returns struct
-  "metadata" of the deleted folder. Folders must be empty before calling
+  (discouraged) or int "folderid" parameter. Upon success returns "metadata" 
+  structure of the deleted folder. Folders must be empty before calling
   deletefolder.
 
 * uploadfile, auth: yes - string "path" or int "folderid" specify the target
@@ -884,7 +885,7 @@ On success it returns:
                    Every user is guaranteed to have one such event in it's
                    full state diff.
     
-!!! look out for deletedfileid set in metadata returned from either
+!!! Pay close attention to deletedfileid field set in metadata returned from either
 !!! "modifyfile" or "createfile" when one file is atomically replaced with
 !!! another one
                         
@@ -953,7 +954,7 @@ then resized to 128x128. To create a rectangular thumb from 4:3 image exactly
 1/8 is cropped from each side. By default the thumbnail is in jpeg format.
 If the "type" parameter is set to png, a png image will be produced. On success
 the same data as with "getfilelink" is returned, additionally the real image
-"size" is returned, it will match reqested "size" if "crop" is 
+produced "size" is returned, it will match reqested "size" if "crop" is 
 specified or may differ otherwise.
 
   Thumbs are created on first request and cached for unspecified amount of time
@@ -974,7 +975,7 @@ array "thumbs" with objects. Each object has "result" and "fileid" set.
 than multiple calls to "getthumblink" (even if pipelined), as "getthumbslinks"
 connects to multiple storage serves simultaneously to generate thumbs and in
 most cases it is just slightly slower than a single call to "getthumblink" even
-if 20 thumbnails are requested. 
+if multiple thumbnails are requested. 
 
 * getthumb, auth: yes - takes the same parameters as getthumblink, but returns
 the thumbnail over the current API connection. Getting thumbnails from API
@@ -1063,9 +1064,11 @@ SHOULD check this locally too.
 implementations can not know if this is going to happen, but are expected to
 act appropriately on this error.
            
-* cancelsharerequest, auth: yes - cancels a share request sent by the current user. The request is identified by "sharerequestid".
+* cancelsharerequest, auth: yes - cancels a share request sent by the current
+user. The request is identified by "sharerequestid".
 
-* sharerequestinfo, auth: no - requires 'code' for a share request (as sent to user's email) and returns information about a 'share'.
+* sharerequestinfo, auth: no - requires 'code' for a share request (as sent to
+user's email) and returns information about a 'share'.
 
 * listshares, auth: yes - returns two objects "shares" and "requests" both with
 sub-objects "incoming" and "outgoing". Lists current shares and share requests.
@@ -1236,7 +1239,8 @@ specified:
      maxtraffic:      modifies the traffic limit, set to 0 for unlimited
      maxdownloads:    modifies the downloads limit, set to 0 for unlimited
      
-* getpubthumb, auth: no - same as "getthumb", but works on public file identified by 'code' (and fileid if link is to a folder)
+* getpubthumb, auth: no - same as "getthumb", but works on public file
+identified by 'code' (and fileid if link is to a folder)
 
 * getpubthumblink, auth: no - same as "getthumblink", but works on public file
 identified by 'code' (and fileid if link is to a folder)
@@ -1271,7 +1275,8 @@ identified by 'code' (and fileid if link is to a folder)
 !!! can be send.
 
 * createuploadlink, auth: yes - creates upload link. Expects "folderid"/"path"
-to which uploaded files will be saved. The folder must be owned by the user.
+of the folder where the uploaded files will be saved. The folder must be owned
+by the user.
 Also SHOULD have a "comment" parameter that contains any comments/instructions
 the user is willing to provide to uploading users. Comments are the only
 information that uploading users will see (they will not know username of the
@@ -1437,7 +1442,7 @@ or after the file end if "whence" is 2. Returns the new "offset".
 which can be 0 to release a lock, 1 to get a shared lock and 2 to get an
 exclusive lock. If the "offset" parameter is provided, only bytes starting
 from this offset are locked (default for offset is 0). If the "length"
-parameter is provided, only length bytes starting from "offset" are locked.
+parameter is provided, only "length" bytes starting from "offset" are locked.
 Length of 0 means lock until the end of file (no matter how big it grows).
   The default for "length" is also 0. If "whence" is provided it tells how to
 interpret "offset". The default whence of 0 means that offset is in bytes from
@@ -1447,8 +1452,8 @@ acquiring the lock only a test is performed if the file region can be locked.
 By default locks are blocking, that is the call will block until the lock is
 granted (except when "get" is set or request is for unlocking). If you do not
 wish the lock to block, set the "noblock" parameter. 
-  The call is always successful unless read/write error is encountered. That is,
-result will be 0 regardless if lock was granted or not. One should check the
+  The call is always successful unless read/write error is encountered. 
+Result will be 0 regardless if lock was granted or not. One should check the
 return field "locked" to see if lock was granted. Unlocking always sets
 "locked" to true, the same goes for blocking requests, as they are always
 successful (sooner or later). So with "result" of "0" checking the value of
@@ -1468,6 +1473,3 @@ successful (sooner or later). So with "result" of "0" checking the value of
 !!! The API servers do not perform any kind of deadlock detection.
 
 ------------------
-
-
-
