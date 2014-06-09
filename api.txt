@@ -15,7 +15,7 @@ so that cookie with some name will override the same GET parameter).
 Response is normally JSON array with multiple fields. The key "result" is
 always present. Normally result:0 means success while a non-zero result means 
 an error. A non-zero result also sets the "error" key with an error message.
-Error codes passed by result can be seen in ERRORS array of settings.lua.
+Error codes passed by result can be seen in errors.txt
 When there is an error HTTP header "X-Error: xxxx" is sent with the error code.
 
 On a single connection (i.e. keep-alive connection) you need to authenticate
@@ -103,7 +103,7 @@ to 64K and DOES NOT include the length of the data that may be present.
 The first byte of the request gives the length of the name of the 
 method - method_len (bits 0-6) and indicates if the request has data (bit 7).
 If the highest bit(7) is set, than the following 8 bytes represent 64 bit 
-number, that is thelength of the data that comes immediately after the request.
+number, that is the length of the data that comes immediately after the request.
 The next method_len bytes are the name of the method to be called.
 
 The following one byte represent 8 bit number containing the number of
@@ -144,7 +144,7 @@ hash (like JSON object)
 data
 
 For each value, the first byte represent the type of the value. Since the
-response is highly compressed, each valuetype can have multiple types:
+response is highly compressed, each value type can have multiple types:
 
 Strings:
   String values can be reused values (pointer to a string value already sent)
@@ -446,17 +446,13 @@ processing any login parameters. In order to switch the logged user on a
 connection both logout and any form of authentication should be present.
 
 username/password - 
-username/passwordmd5 - 
 username/passworddigest/digest - General authentication methods.
 
 Username and password are self-explanatory.
 
-Username and passwordmd5 are the username and a plain md5() of the password, in hex,
-lowercase.
-
 Username and passworddigest/digest - you first need to call the "getdigest", and
-then generate password digest by calculating md5 of the password, concatenated
-with the received digest, in hex, lowercase.
+then generate password digest by calculating sha1 of the password, concatenated
+with the lowercased username and the received digest, in hex, lowercase.
 
 
 ERRORS
@@ -846,7 +842,7 @@ On success it returns:
   preferably in a single transaction with the event itself.
   Each object will have at least keys "event", "time" and "diffid". In most
   cases also "metadata" will be provided. "time" is the timestamp of the
-  event, "diffid" is the event's identificator. It can  be used to request
+  event, "diffid" is the event's identifier. It can  be used to request
   updates since this event. Normally diffids are incrementing integers, but
   one can not assume that ids are consecutive as events that cancel each other
   (e.g. createfolder, deletefolder) are not displayed if they happen to be in
@@ -921,7 +917,7 @@ For shares, a "share" object is provided with keys:
 
   "time" of the event is the time of the event - even if the event is
 "createfolder", "time" is not guaranteed to be the folder's creation time.
-The folder might be somebody elses folder,created an year ago, that was just
+The folder might be somebody else's folder,created an year ago, that was just
 shared with you.
 
 !!!IMPORTANT!!! When a folder/file is created/delete/moved in or out of a
@@ -954,7 +950,7 @@ then resized to 128x128. To create a rectangular thumb from 4:3 image exactly
 1/8 is cropped from each side. By default the thumbnail is in jpeg format.
 If the "type" parameter is set to png, a png image will be produced. On success
 the same data as with "getfilelink" is returned, additionally the real image
-produced "size" is returned, it will match reqested "size" if "crop" is 
+produced "size" is returned, it will match requested "size" if "crop" is 
 specified or may differ otherwise.
 
   Thumbs are created on first request and cached for unspecified amount of time
@@ -1349,7 +1345,7 @@ and cannot be all consecutive letters from a standard keyboard (no "qwerty"
 or "poiuyt"). Also the password can not start or end with whitespace.
   
 * lostpassword, auth: no - takes as a parameter user's 'mail' and sends to this
-email address insertuctions and link to reset user's password. A successful
+email address instructions and link to reset user's password. A successful
 reply is sent even if there is no user of the system with 'mail' for security
 reasons.
   
@@ -1361,7 +1357,7 @@ The new password is subject to the same checks as in changepassword.
 MUST be set to 'yes' if the user accepted terms of service and other
 agreements. 'mail' should be user's email address and 'password' - to the user's
 chosen password. Optionally 'language' SHOULD be set to one of the supported
-languages and 'referer' SHOULD be the userid of the refering user. For the 
+languages and 'referer' SHOULD be the userid of the referring user. For the 
 password requirements see 'changepassword'.
   
 * invite, auth: yes - returns 'url' of registration page with a referrer code
