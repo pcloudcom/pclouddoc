@@ -1,4 +1,4 @@
-package com.mobileinno.hotfile.abstraction.networking;
+package org.pcloud;
 
 import java.io.*;
 import java.net.*;
@@ -232,7 +232,7 @@ public class PCloudAPI {
     }
 
     public Object sendCommand(String method, Map<String, Object> params, boolean hasdata, long datalen) throws UnsupportedEncodingException, IOException, InputMismatchException {
-	byte[] data = new byte[2048];
+	byte[] data = new byte[65536 + 2];
 	byte[] methodb = method.getBytes("UTF-8");
 	int off = 2;
 	int cmdlen = methodb.length;
