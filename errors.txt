@@ -48,7 +48,7 @@ Error codes:
 2001 Invalid file/folder name.
 2002 A component of parent directory does not exist.
 2003 Access denied. You do not have permissions to preform this operation.
-2004 File or folder alredy exists.
+2004 File or folder already exists.
 2005 Directory does not exist.
 2006 Folder is not empty.
 2007 Cannot delete the root folder.
@@ -89,7 +89,7 @@ Error codes:
 2042 Cannot rename the root folder.
 2043 Cannot move a folder to a subfolder of itself.
 2044 Video links can only be generated for videos.
-3000 SSL error occured. Check sslerror for more information.
+3000 SSL error occurred. Check sslerror for more information.
 3001 Could not create thumb from the given file.
 3002 Connection to iTunes failed.
 3003 iTunes error.
@@ -102,7 +102,7 @@ Error codes:
 6000 Not modified
 7001 Invalid link 'code'.
 7002 This link is deleted by the owner.
-7003 This link is deleted bacause of copyright complaint.
+7003 This link is deleted because of copyright complaint.
 7004 This link has expired.
 7005 This link has reached its traffic limit.
 7006 This link has reached maximum downloads.
@@ -207,7 +207,7 @@ Error codes and who throws them:
   getaudiolink, getvideolink, getpublinkdownload, getpubthumblink, getthumb, getpubaudiolink, savepubthumb, deletefile, revertrevision, acceptshare, listrevisions, copypubfile, copytolink, renamefile, getfilelink, savezip, getpubthumb, getthumblink, copyfile, checksumfile, gethlslink, file_open, savepubzip, createfolder, savethumb, getfilepublink
 2003 Access denied. You do not have permissions to preform this operation.
   getaudiolink, deletefolder, getvideolink, file_pwrite, getthumb, savepubthumb, deletefile, revertrevision, listrevisions, copypubfile, copytolink, file_write, renamefile, getfilelink, savezip, getthumblink, renamefolder, copyfile, checksumfile, gethlslink, uploadfile, file_open, savepubzip, createfolder, savethumb, listfolder, downloadfile
-2004 File or folder alredy exists.
+2004 File or folder already exists.
   savepubthumb, copypubfile, savezip, renamefolder, copyfile, file_open, savepubzip, createfolder, savethumb
 2005 Directory does not exist.
   deletefolder, renamefile, createuploadlink, renamefolder, uploadfile, getfolderpublink, sharefolder, listfolder, downloadfile
@@ -288,7 +288,7 @@ Error codes and who throws them:
   renamefolder
 2044 Video links can only be generated for videos.
   getaudiolink, getvideolink, getpubaudiolink, gethlslink
-3000 SSL error occured. Check sslerror for more information.
+3000 SSL error occurred. Check sslerror for more information.
   getcertificate
 3001 Could not create thumb from the given file.
   getpubthumblink, getthumb, savepubthumb, getpubthumb, getthumblink, savethumb
@@ -314,7 +314,7 @@ Error codes and who throws them:
   getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, getpubthumb, savepubzip, showpublink, getpubzip, getpubthumbslinks
 7002 This link is deleted by the owner.
   getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, copytolink, getpubthumb, savepubzip, showpublink, uploadtolink, getpubzip, showuploadlink, getpubthumbslinks
-7003 This link is deleted bacause of copyright complaint.
+7003 This link is deleted because of copyright complaint.
 7004 This link has expired.
   getpubziplink, getpublinkdownload, getpubthumblink, getpubaudiolink, savepubthumb, copypubfile, copytolink, getpubthumb, savepubzip, showpublink, uploadtolink, getpubzip, showuploadlink, getpubthumbslinks
 7005 This link has reached its traffic limit.
@@ -523,7 +523,7 @@ savepubthumb
   2001 Invalid file/folder name.
   2002 A component of parent directory does not exist.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   2008 User is over quota.
   2009 File not found.
   3001 Could not create thumb from the given file.
@@ -627,7 +627,7 @@ copypubfile
   2001 Invalid file/folder name.
   2002 A component of parent directory does not exist.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   2008 User is over quota.
   2009 File not found.
   2010 Invalid path.
@@ -749,7 +749,7 @@ savezip
   2001 Invalid file/folder name.
   2002 A component of parent directory does not exist.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   2008 User is over quota.
   2009 File not found.
   4000 Too many login tries from this IP address.
@@ -803,7 +803,7 @@ renamefolder
   2000 Log in failed.
   2001 Invalid file/folder name.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   2005 Directory does not exist.
   2008 User is over quota.
   2023 You are trying to place shared folder into another shared folder.
@@ -819,7 +819,7 @@ copyfile
   2001 Invalid file/folder name.
   2002 A component of parent directory does not exist.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   2008 User is over quota.
   2009 File not found.
   2010 Invalid path.
@@ -902,7 +902,7 @@ file_open
   2001 Invalid file/folder name.
   2002 A component of parent directory does not exist.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   2008 User is over quota.
   2009 File not found.
   2010 Invalid path.
@@ -919,7 +919,7 @@ savepubzip
   2001 Invalid file/folder name.
   2002 A component of parent directory does not exist.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   2008 User is over quota.
   4000 Too many login tries from this IP address.
   5000 Internal error. Try again later.
@@ -973,7 +973,7 @@ createfolder
   2001 Invalid file/folder name.
   2002 A component of parent directory does not exist.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   4000 Too many login tries from this IP address.
   5000 Internal error. Try again later.
 savethumb
@@ -986,7 +986,7 @@ savethumb
   2001 Invalid file/folder name.
   2002 A component of parent directory does not exist.
   2003 Access denied. You do not have permissions to preform this operation.
-  2004 File or folder alredy exists.
+  2004 File or folder already exists.
   2008 User is over quota.
   2009 File not found.
   2010 Invalid path.
@@ -1132,7 +1132,7 @@ getcertificate
   1000 Log in required.
   1003 Neither csr or publickey is provided. Please create Certificate Signing Request and pass it as 'csr' parameter or send your 'publickey'.
   2000 Log in failed.
-  3000 SSL error occured. Check sslerror for more information.
+  3000 SSL error occurred. Check sslerror for more information.
   4000 Too many login tries from this IP address.
 changeuploadlink
   1000 Log in required.
